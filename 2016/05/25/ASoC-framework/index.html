@@ -1,0 +1,845 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta name="baidu-site-verification" content="wtiIcSmt3U" />
+<meta name="google-site-verification" content="XD6-y8mgHOkN3DXdrUw4WwjPFkDrTcvkoyo7rLipzrQ" />
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext/css?family=Monda:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="ALSA,ASoC,linux,driver," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/zero.png?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="ASoC OverviewALSA System on Chip(ASoC) layer 的目的是为嵌入式处理器以及各种codec提供更好的ALSA支持。在ASoC之前，linux已经对SoC audio提供了相应的支持，但是有如下的缺点。
+
+codec driver 和 cpu 的代码之间耦合性太强，导致难移植以及代码的重复。
+没有标准的方法处理用户audio相关行为的通知。在移动场景下，相关行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ASoC framework">
+<meta property="og:url" content="hoastyle.github.io/2016/05/25/ASoC-framework/index.html">
+<meta property="og:site_name" content="ZERO 城">
+<meta property="og:description" content="ASoC OverviewALSA System on Chip(ASoC) layer 的目的是为嵌入式处理器以及各种codec提供更好的ALSA支持。在ASoC之前，linux已经对SoC audio提供了相应的支持，但是有如下的缺点。
+
+codec driver 和 cpu 的代码之间耦合性太强，导致难移植以及代码的重复。
+没有标准的方法处理用户audio相关行为的通知。在移动场景下，相关行">
+<meta property="og:updated_time" content="2016-05-28T12:24:38.791Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ASoC framework">
+<meta name="twitter:description" content="ASoC OverviewALSA System on Chip(ASoC) layer 的目的是为嵌入式处理器以及各种codec提供更好的ALSA支持。在ASoC之前，linux已经对SoC audio提供了相应的支持，但是有如下的缺点。
+
+codec driver 和 cpu 的代码之间耦合性太强，导致难移植以及代码的重复。
+没有标准的方法处理用户audio相关行为的通知。在移动场景下，相关行">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> ASoC framework | ZERO 城 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">ZERO 城</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">share</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                ASoC framework
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-25T15:08:03+08:00" content="2016-05-25">
+              2016-05-25
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/" itemprop="url" rel="index">
+                    <span itemprop="name">Tech</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/" itemprop="url" rel="index">
+                    <span itemprop="name">OS</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/" itemprop="url" rel="index">
+                    <span itemprop="name">Driver</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/Audio/" itemprop="url" rel="index">
+                    <span itemprop="name">Audio</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/05/25/ASoC-framework/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/25/ASoC-framework/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+  			  <span id="busuanzi_container_page_pv">  |  阅读量 <span id="busuanzi_value_page_pv"></span> 次</span>
+		  
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="ASoC-Overview"><a href="#ASoC-Overview" class="headerlink" title="ASoC Overview"></a>ASoC Overview</h1><p>ALSA System on Chip(ASoC) layer 的目的是为嵌入式处理器以及各种codec提供更好的ALSA支持。在ASoC之前，linux已经对SoC audio提供了相应的支持，但是有如下的缺点。</p>
+<ul>
+<li>codec driver 和 cpu 的代码之间耦合性太强，导致难移植以及代码的重复。</li>
+<li>没有标准的方法处理用户audio相关行为的通知。在移动场景下，相关行为越发频繁，所以需要专门的机制。<blockquote>
+<p>原来的方案？现在的方案？</p>
+</blockquote>
+</li>
+<li>在原来的架构上，往往不需要考虑省点的问题。但是对于嵌入式设备，这是一个关键点，所以需要有相关的机制。<blockquote>
+<p>DAPM</p>
+</blockquote>
+</li>
+</ul>
+<p>ASoC就是为了解决上述问题而设计出来的新的架构。其优点如下：</p>
+<ul>
+<li>独立codec驱动，降低其和cpu的耦合性</li>
+<li>更方便的配置cpu和codec之间的音频数据接口</li>
+<li>Dynamic Audio Power Management(DAPM)，动态控制功耗</li>
+<li>降低pop和click, 增加平台相关的控制</li>
+</ul>
+<a id="more"></a>
+<p>为实现上面提到的种种特性，ASoC将嵌入式音频系统分为三个可以重用的component driver，分别是machine class, platform class, codec class。其中，platform &amp; codec是跨平台的，而machine是板级相关。</p>
+<h2 id="ASoC和ALSA的关系"><a href="#ASoC和ALSA的关系" class="headerlink" title="ASoC和ALSA的关系"></a>ASoC和ALSA的关系</h2><p>为了弄清楚ASoC的整个框架，将会从以下两个角度探讨ASoC</p>
+<ul>
+<li>各个部分之间的关系</li>
+<li>音频初始化流程以及运行流程</li>
+</ul>
+<h1 id="Component-in-ASoC"><a href="#Component-in-ASoC" class="headerlink" title="Component in ASoC"></a>Component in ASoC</h1><p>以sc58x 以及 samsung为例，解释其框架结构。</p>
+<h2 id="machine-class"><a href="#machine-class" class="headerlink" title="machine class"></a>machine class</h2><blockquote>
+<p>概述: 是将各个组件绑定成一个”sound card device”，它可以处理平台级别的控制操作以及相关事件。</p>
+</blockquote>
+<p>machine driver的命名往往是platform_codec.c的形式。<br>如在sc58x中，sc58x-adau1962.c为adau1962在sc58x上的machine driver.<br>在samsung中，smdk_wm8994.c位wm8994在smdk上的machine driver</p>
+<p>主要结构：</p>
+<ul>
+<li>snd_soc_card</li>
+</ul>
+<p>主要函数：</p>
+<ul>
+<li>snd_soc_register_card</li>
+</ul>
+<h2 id="platform"><a href="#platform" class="headerlink" title="platform"></a>platform</h2><blockquote>
+<p>概述：主要是负责数据的传输，而在音频中都是通过DMA传输数据。所以该部分包括DMA的控制以及{DAI}.</p>
+</blockquote>
+<p>主要结构体：</p>
+<ul>
+<li>snd_soc_platform</li>
+<li>snd_soc_platform_driver</li>
+</ul>
+<p>主要函数：</p>
+<ul>
+<li>snd_soc_register_platform</li>
+</ul>
+<h2 id="codec"><a href="#codec" class="headerlink" title="codec"></a>codec</h2><blockquote>
+<p>概述：负责(A/D,D/A)转换，通路控制(音乐播放, fm, …)，音频信号的处理(放大，格式转换, …)</p>
+</blockquote>
+<p>主要结构：</p>
+<ul>
+<li>snd_soc_codec</li>
+<li>snd_soc_codec_driver</li>
+</ul>
+<p>主要函数：</p>
+<ul>
+<li><p>snd_soc_register_codec<br>另外，还有DAI，分为cpu dai和codec dai.<br>两种存在方式:</p>
+</li>
+<li><p>单独存在<br>作为一个platform driver独立存在。  </p>
+</li>
+<li>(platform &amp; cpu dai) and (codec dai &amp; codec)<br>和platform或者codec在同一个platform driver中进行注册和初始化。</li>
+</ul>
+<h2 id="DAI"><a href="#DAI" class="headerlink" title="DAI"></a>DAI</h2><blockquote>
+<p>概述：</p>
+</blockquote>
+<p>主要结构：</p>
+<ul>
+<li>snd_soc_dai</li>
+<li>snd_soc_dai_driver</li>
+<li>snd_soc_dai_ops</li>
+</ul>
+<p>cpu dai<br>cpu dai对应的是cpu测的一个或者几个数字音频接口（i2s &amp; pcm &amp; …），cpu dai driver的作用是完成cpu测dai的参数配置，使其可以进行数据传输。  </p>
+<p>codec dai  </p>
+<p>component_list</p>
+<p>dai_list</p>
+<h2 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h2><h3 id="machine"><a href="#machine" class="headerlink" title="machine"></a>machine</h3><p>旅程从machine driver开始。<br>以samsung为例，分析smdk_wm8994.c<br>machine driver实现为一个platform driver，该driver的probe函数的主要目的是注册snd_soc_card结构体。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ret = devm_snd_soc_register_card(&amp;pdev-&gt;dev, card);</span><br></pre></td></tr></table></figure></p>
+<p>首先对card做了初步的初始化，并定义了snd_soc_dai_link结构。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">struct</span> snd_soc_dai_link smdk_dai[] = &#123;</span><br><span class="line">    &#123; <span class="comment">/* Primary DAI i/f */</span></span><br><span class="line">	.name = <span class="string">"WM8994 AIF1"</span>,</span><br><span class="line">	.stream_name = <span class="string">"Pri_Dai"</span>,</span><br><span class="line">	.cpu_dai_name = <span class="string">"samsung-i2s.0"</span>,</span><br><span class="line">	.codec_dai_name = <span class="string">"wm8994-aif1"</span>,</span><br><span class="line">	.platform_name = <span class="string">"samsung-i2s.0"</span>,</span><br><span class="line">	.codec_name = <span class="string">"wm8994-codec"</span>,</span><br><span class="line">	.init = smdk_wm8994_init_paiftx,</span><br><span class="line">	.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |        </span><br><span class="line">            SND_SOC_DAIFMT_CBM_CFM,</span><br><span class="line">	.ops = &amp;smdk_ops,                                             </span><br><span class="line">    &#125;, &#123; <span class="comment">/* Sec_Fifo Playback i/f */</span></span><br><span class="line">	.name = <span class="string">"Sec_FIFO TX"</span>,</span><br><span class="line">	.stream_name = <span class="string">"Sec_Dai"</span>,</span><br><span class="line">	.cpu_dai_name = <span class="string">"samsung-i2s-sec"</span>,</span><br><span class="line">	.codec_dai_name = <span class="string">"wm8994-aif1"</span>,</span><br><span class="line">	.platform_name = <span class="string">"samsung-i2s-sec"</span>,</span><br><span class="line">	.codec_name = <span class="string">"wm8994-codec"</span>,</span><br><span class="line">	.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |</span><br><span class="line">	    SND_SOC_DAIFMT_CBM_CFM,</span><br><span class="line">	.ops = &amp;smdk_ops,</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">struct</span> snd_soc_card smdk = &#123;</span><br><span class="line">    .name = <span class="string">"SMDK-I2S"</span>,</span><br><span class="line">    .owner = THIS_MODULE,</span><br><span class="line">    .dai_link = smdk_dai,</span><br><span class="line">    .num_links = ARRAY_SIZE(smdk_dai),</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>其中引出了两个比较重要的结构，snd_soc_dai_link和snd_soc_ops.<br>其中snd_soc_dai_link指定了音频系统中各个子设备(platform, cpu dai, codec dai, codec)的名字用于匹配.</p>
+<p>snd_soc_ops的作用是什么？</p>
+<p>最主要的就是card的register, snd_soc_register_card函数，下面是简化版的实现<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化struct snd_soc_dai_link_component dai_link-&gt;codecs，包括name, of_node, dai_name</span></span><br><span class="line">snd_soc_init_multicodec(card, link)</span><br><span class="line">card-&gt;dev-&gt;driver_data = card</span><br><span class="line"><span class="comment">//初始化snd_soc_pcm_runtime</span></span><br><span class="line">card-&gt;rtd = alloc;</span><br><span class="line">card-&gt;rtd.card = card</span><br><span class="line">card-&gt;rtd.dai_link = dai_link</span><br><span class="line"><span class="comment">//snd_soc_dai</span></span><br><span class="line">card-&gt;rtd.codec_dais = alloc;</span><br><span class="line"><span class="comment">//实例化card</span></span><br><span class="line">snd_soc_instantiate_card</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>引出snd_soc_instantiate_card</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">snd_bind_dai_link</span><br><span class="line">//SNDRV_DEFAULT_STR1是card identification</span><br><span class="line">snd_card_new(card-&gt;dev, SNDRV_DEFAULT_IDX1, SNDRV_DEFAULT_STR1, </span><br><span class="line">	card-&gt;owner, 0, &amp;card-&gt;snd_card);) </span><br><span class="line">soc_probe_link_components</span><br><span class="line">soc_probe_link_dais</span><br><span class="line">snd_soc_runtime_set_dai_fmt(&amp;card-&gt;rtd[i], card-&gt;dai_link[i].dai_fmt)</span><br><span class="line">snd_card_register</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>以上每个部分都很重要，分开来描述</p>
+<h4 id="snd-bind-dai-link"><a href="#snd-bind-dai-link" class="headerlink" title="snd_bind_dai_link"></a>snd_bind_dai_link</h4><blockquote>
+<p>遍历每一个dai_link，轮询codec_list &amp; platform_list &amp; dai_list, 对codec, platform, dai进行绑定.</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//定义并初始化cpu_dai_component，codecs在snd_soc_register_card中初始化</span></span><br><span class="line">snd_soc_dai_link_component cpu_dai_component;</span><br><span class="line">cpu_dai_component.name = </span><br><span class="line">cpu_dai_component.of_node</span><br><span class="line">cpu_dai_component.dai_name = </span><br><span class="line"></span><br><span class="line"><span class="comment">//查找component_list以及component-&gt;dai_list，获取snd_soc_dai cpu_dai</span></span><br><span class="line"><span class="comment">//问题: 各个component之间的关系是什么？</span></span><br><span class="line">snd_soc_find_dai(&amp;cpu_dai_component)</span><br><span class="line">rtd-&gt;cpu_dai</span><br><span class="line"></span><br><span class="line"><span class="comment">//查找component_list以及component-&gt;dai_list，获取snd_soc_dai codec_dais</span></span><br><span class="line">snd_soc_find_dai(&amp;codecs[i])</span><br><span class="line">rtd-&gt;codec_dai</span><br><span class="line">rtd-&gt;codec</span><br><span class="line"></span><br><span class="line"><span class="comment">//查找platform_list，获取snd_soc_platform</span></span><br><span class="line">rtd-&gt;platform = platform;</span><br></pre></td></tr></table></figure>
+<h4 id="snd-card-new"><a href="#snd-card-new" class="headerlink" title="snd_card_new"></a>snd_card_new</h4><blockquote>
+<p>分配初始化card的核心设备结构snd_card</p>
+</blockquote>
+<p>card作为一个设备，其和内核设备模型相关的部分在该函数中完成。</p>
+<h4 id="snd-probe-link-components"><a href="#snd-probe-link-components" class="headerlink" title="snd_probe_link_components"></a>snd_probe_link_components</h4><blockquote>
+<p>按照参数order的先后顺序对component进行初始化</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> snd_soc_component *component;</span><br><span class="line"></span><br><span class="line">component rtd-&gt;cpu_dai-&gt;component;</span><br><span class="line">ret = soc_probe_component(card, component)</span><br><span class="line"></span><br><span class="line">component = rtd-&gt;codec_dais[i]-&gt;component;</span><br><span class="line">ret = soc_probe_component(card, component);</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> snd_soc_platform *platform = rtd-&gt;platform;</span><br><span class="line">ret = soc_probe_component(card, &amp;platform-&gt;component);</span><br></pre></td></tr></table></figure>
+<p>soc_probe_component和snd_soc_component是其中两个主要部分。</p>
+<p><strong>soc_probe_component</strong><br>dapm和control相关的初始化以及运行component-&gt;probe(component).</p>
+<p><strong>snd_soc_component</strong>，ASoC的核心组件cpu_dai, codec_dai, platform都有对应的component，且应该有component-&gt;probe，那么这些component和probe是什么时候建立和初始化的呢？</p>
+<p><strong>component的初始化</strong><br>soc_probe_component的核心是调用component-&gt;probe(component)函数。<br>而component-&gt;probe的初始化发生在snd_soc_component_initialize中(由snd_soc_register_component调用)。</p>
+<p>snd_soc_register_component(dev, component_driver, dai_driver, num_dai)<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> snd_soc_component component;</span><br><span class="line">component = alloc</span><br><span class="line"><span class="comment">//init component-&gt;dev, driver, probe, remote, dapm, control</span></span><br><span class="line"><span class="comment">//init component-&gt;dai_list list_head</span></span><br><span class="line">ret = snd_soc_component_initialize(component, component_driver, dev)</span><br><span class="line"><span class="comment">//分配snd_soc_dai, 初始化snd_soc_dai，并将其添加到component-&gt;dai_list</span></span><br><span class="line">ret = snd_soc_register_dais(component, dai_driver, num_dai, <span class="literal">true</span>)</span><br><span class="line"><span class="comment">//将component-&gt;list加入component_list</span></span><br><span class="line">snd_soc_component_add(component)</span><br></pre></td></tr></table></figure></p>
+<p>问题：</p>
+<ul>
+<li>component的作用是什么？</li>
+<li>为什么dai需要component?</li>
+</ul>
+<h4 id="soc-probe-link-dais"><a href="#soc-probe-link-dais" class="headerlink" title="soc_probe_link_dais"></a>soc_probe_link_dais</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//cpu dai-&gt;driver-&gt;probe</span></span><br><span class="line">ret = soc_probe_dai(cpu_dai, order)</span><br><span class="line"><span class="comment">//codec dai-&gt;driver-&gt;probe</span></span><br><span class="line">ret = soc_probe_dai(rtd-&gt;codec_dais[i], order)</span><br><span class="line"><span class="comment">//运行machine init</span></span><br><span class="line">dai_link-&gt;init(rtd)</span><br><span class="line"><span class="comment">//将rtd加入到设备模型中</span></span><br><span class="line">soc_post_component_init</span><br><span class="line"><span class="comment">//判断cpu_dai是compress dai还是pcm</span></span><br><span class="line"><span class="comment">//如果是compress</span></span><br><span class="line">soc_new_compress</span><br><span class="line"><span class="comment">//如果不是</span></span><br><span class="line">soc_new_pcm(rtd, num)</span><br></pre></td></tr></table></figure>
+<p>soc_new_pcm<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">待定</span><br></pre></td></tr></table></figure></p>
+<p>问题：</p>
+<ul>
+<li>soc_new_pcm做了什么？</li>
+<li>什么是compress device，和pcm的区别是什么？</li>
+</ul>
+<h4 id="snd-card-register"><a href="#snd-card-register" class="headerlink" title="snd_card_register"></a>snd_card_register</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">device_add(&amp;card-&gt;card_dev)</span><br><span class="line"><span class="comment">//遍历snd_card-&gt;devices链表注册其中所有的device</span></span><br><span class="line"><span class="comment">//调用dev-&gt;ops-&gt;dev_register</span></span><br><span class="line">snd_device_register_all(card)</span><br></pre></td></tr></table></figure>
+<h3 id="platform-1"><a href="#platform-1" class="headerlink" title="platform"></a>platform</h3><h3 id="codec-1"><a href="#codec-1" class="headerlink" title="codec"></a>codec</h3><h2 id="音频流程"><a href="#音频流程" class="headerlink" title="音频流程"></a>音频流程</h2><p>以上描述了各个部分的作用以及各个部分之间的联系。而在alsa框架中，整个音频流程是怎么样的？<br>如何构建一个完整的音频流？</p>
+<ul>
+<li>PCM play</li>
+<li>PCM record</li>
+</ul>
+<p>描述完框架性的结构，可以探讨ASoC中的一些其他有趣的部分，比如DMA.</p>
+<h1 id="Other"><a href="#Other" class="headerlink" title="Other"></a>Other</h1><h2 id="DPAM"><a href="#DPAM" class="headerlink" title="DPAM"></a>DPAM</h2><h2 id="DMA-in-ALSA"><a href="#DMA-in-ALSA" class="headerlink" title="DMA in ALSA"></a>DMA in ALSA</h2><h2 id="Debug-in-ALSA"><a href="#Debug-in-ALSA" class="headerlink" title="Debug in ALSA"></a>Debug in ALSA</h2><ul>
+<li>debugfs</li>
+<li>ftrace</li>
+</ul>
+<h2 id="regmap-io"><a href="#regmap-io" class="headerlink" title="regmap-io"></a>regmap-io</h2><h1 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h1><ul>
+<li>ALSA documentation: </li>
+<li>ASoC documentation: Documentation/sound/alsa/soc</li>
+<li><a href="https://www.douban.com/group/topic/48402241/?type=like" target="_blank" rel="external">内核ALSA之ASoC</a></li>
+<li><a href="http://blog.csdn.net/DroidPhone/article/category/1118446" target="_blank" rel="external">ALSA子系统</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ALSA/" rel="tag">#ALSA</a>
+          
+            <a href="/tags/ASoC/" rel="tag">#ASoC</a>
+          
+            <a href="/tags/linux/" rel="tag">#linux</a>
+          
+            <a href="/tags/driver/" rel="tag">#driver</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/05/21/Hexo搭建博客/" rel="next" title="Hexo搭建博客">
+                <i class="fa fa-chevron-left"></i> Hexo搭建博客
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/05/25/Tools/" rel="prev" title="Tools">
+                Tools <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/05/25/ASoC-framework/"
+           data-title="ASoC framework" data-url="hoastyle.github.io/2016/05/25/ASoC-framework/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/兔子.JPG"
+               alt="Hao(梁浩)" />
+          <p class="site-author-name" itemprop="name">Hao(梁浩)</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">6</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ASoC-Overview"><span class="nav-number">1.</span> <span class="nav-text">ASoC Overview</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ASoC和ALSA的关系"><span class="nav-number">1.1.</span> <span class="nav-text">ASoC和ALSA的关系</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Component-in-ASoC"><span class="nav-number">2.</span> <span class="nav-text">Component in ASoC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#machine-class"><span class="nav-number">2.1.</span> <span class="nav-text">machine class</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#platform"><span class="nav-number">2.2.</span> <span class="nav-text">platform</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#codec"><span class="nav-number">2.3.</span> <span class="nav-text">codec</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DAI"><span class="nav-number">2.4.</span> <span class="nav-text">DAI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码分析"><span class="nav-number">2.5.</span> <span class="nav-text">代码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#machine"><span class="nav-number">2.5.1.</span> <span class="nav-text">machine</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#snd-bind-dai-link"><span class="nav-number">2.5.1.1.</span> <span class="nav-text">snd_bind_dai_link</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#snd-card-new"><span class="nav-number">2.5.1.2.</span> <span class="nav-text">snd_card_new</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#snd-probe-link-components"><span class="nav-number">2.5.1.3.</span> <span class="nav-text">snd_probe_link_components</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#soc-probe-link-dais"><span class="nav-number">2.5.1.4.</span> <span class="nav-text">soc_probe_link_dais</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#snd-card-register"><span class="nav-number">2.5.1.5.</span> <span class="nav-text">snd_card_register</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#platform-1"><span class="nav-number">2.5.2.</span> <span class="nav-text">platform</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#codec-1"><span class="nav-number">2.5.3.</span> <span class="nav-text">codec</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#音频流程"><span class="nav-number">2.6.</span> <span class="nav-text">音频流程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Other"><span class="nav-number">3.</span> <span class="nav-text">Other</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#DPAM"><span class="nav-number">3.1.</span> <span class="nav-text">DPAM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DMA-in-ALSA"><span class="nav-number">3.2.</span> <span class="nav-text">DMA in ALSA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Debug-in-ALSA"><span class="nav-number">3.3.</span> <span class="nav-text">Debug in ALSA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#regmap-io"><span class="nav-number">3.4.</span> <span class="nav-text">regmap-io</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao(梁浩)</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<span id="busuanzi_container_site_pv">
+  &nbsp; | &nbsp; 本站总访问量<span id="busuanzi_value_site_pv"></span>次
+</span>
+
+<span id="busuanzi_container_site_uv">
+  &nbsp; | &nbsp; 本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"hoastyle"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

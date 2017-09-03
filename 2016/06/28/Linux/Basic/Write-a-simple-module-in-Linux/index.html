@@ -1,0 +1,865 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta name="baidu-site-verification" content="wtiIcSmt3U" />
+<meta name="google-site-verification" content="XD6-y8mgHOkN3DXdrUw4WwjPFkDrTcvkoyo7rLipzrQ" />
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext/css?family=Monda:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="driver,Linux,module,external," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/zero.png?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="编写，编译并安装简单的内核模块
+
+本文主要介绍了以下内容：
+
+module的简单介绍
+在Linux中编译module
+Simple driver module example
+what is module?
+module and Linux
+
+
+注意
+
+文章中的所有Example都基于ARM架构
+Licence: GPL
+
+
+module的简单介绍module也就是模块，其优点在于可以动态扩展核心">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Write a simple module in Linux">
+<meta property="og:url" content="hoastyle.github.io/2016/06/28/Linux/Basic/Write-a-simple-module-in-Linux/index.html">
+<meta property="og:site_name" content="IoE">
+<meta property="og:description" content="编写，编译并安装简单的内核模块
+
+本文主要介绍了以下内容：
+
+module的简单介绍
+在Linux中编译module
+Simple driver module example
+what is module?
+module and Linux
+
+
+注意
+
+文章中的所有Example都基于ARM架构
+Licence: GPL
+
+
+module的简单介绍module也就是模块，其优点在于可以动态扩展核心">
+<meta property="og:updated_time" content="2017-03-26T03:13:52.361Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Write a simple module in Linux">
+<meta name="twitter:description" content="编写，编译并安装简单的内核模块
+
+本文主要介绍了以下内容：
+
+module的简单介绍
+在Linux中编译module
+Simple driver module example
+what is module?
+module and Linux
+
+
+注意
+
+文章中的所有Example都基于ARM架构
+Licence: GPL
+
+
+module的简单介绍module也就是模块，其优点在于可以动态扩展核心">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> Write a simple module in Linux | IoE </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">IoE</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Write a simple module in Linux
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-28T00:15:57+08:00" content="2016-06-28">
+              2016-06-28
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/" itemprop="url" rel="index">
+                    <span itemprop="name">Tech</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/" itemprop="url" rel="index">
+                    <span itemprop="name">OS</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/" itemprop="url" rel="index">
+                    <span itemprop="name">Driver</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/Basic/" itemprop="url" rel="index">
+                    <span itemprop="name">Basic</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/06/28/Linux/Basic/Write-a-simple-module-in-Linux/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/28/Linux/Basic/Write-a-simple-module-in-Linux/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+  			  <span id="busuanzi_container_page_pv">  |  阅读量 <span id="busuanzi_value_page_pv"></span> 次</span>
+		  
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote class="blockquote-center"><font size="5"><strong>编写，编译并安装简单的内核模块</strong></font></blockquote>
+
+<p>本文主要介绍了以下内容：</p>
+<ul>
+<li>module的简单介绍</li>
+<li>在Linux中编译module</li>
+<li>Simple driver module example</li>
+<li>what is module?</li>
+<li>module and Linux</li>
+</ul>
+<blockquote>
+<p>注意</p>
+<ul>
+<li>文章中的所有Example都基于ARM架构</li>
+<li>Licence: GPL</li>
+</ul>
+</blockquote>
+<h1 id="module的简单介绍"><a href="#module的简单介绍" class="headerlink" title="module的简单介绍"></a>module的简单介绍</h1><p>module也就是模块，其优点在于可以动态扩展核心部分的功能而无需将整个软件重新编译连接。广义上来说，Windows上动态链接库DLL是一种module. Linux中的共享库so也可以称为module.<br>而本文中的module，特指Linux内核模块。Linux内核模块可以在系统运行期间动态扩展系统功能而无需重新启动或者无需重新编译整个系统。内核模块的这个特性为Linux内核的开发者提供了很大的便利。</p>
+<a id="more"></a>
+<p>Linux内核模块以ko的形式存在，可以通过：<br><code>$ insmod test.ko</code><br><code>$ rmmod test</code><br>对模块进行加载和卸载。</p>
+<h1 id="在Linux中编译module"><a href="#在Linux中编译module" class="headerlink" title="在Linux中编译module"></a>在Linux中编译module</h1><p><strong>Kbuild</strong>是Linux kernel所使用的编译系统。为了使modules和编译框架兼容并保证gcc flag的正确性，必须使用kbuild编译module.<br>Kbuild提供in-tree编译和out-of-tree编译功能。</p>
+<p>为了能够简便快捷的编译模块，module的作者除了提供module代码之外，还需要提供一个makefile文件，用户只需要简单的通过”make”命令就可以编译这个模块。</p>
+<h2 id="How-to-Build-External-Modules"><a href="#How-to-Build-External-Modules" class="headerlink" title="How to Build External Modules"></a>How to Build External Modules</h2><p>首先，为了编译一个external module, 必须有一个包含了编译过程中使用的配置文件和头文件的prebuild内核。如果你正在使用的是发行版的内核，那么会有一个包含了上述文件的package.</p>
+<blockquote>
+<p>问题1： <code>make modules_prepare的用法</code></p>
+</blockquote>
+<h3 id="编译模块的相关命令"><a href="#编译模块的相关命令" class="headerlink" title="编译模块的相关命令"></a>编译模块的相关命令</h3><p>编译一个外部模块的命令：<br><code>$ make -C &lt;path_of_kernel_src&gt; M=$PWD</code></p>
+<p>其中，”-C”的意思是将目录切换到directory. M不是make的选项，而是内核根目录下Makefile使用的变量，表明external module的文件所在目录.</p>
+<p>使用正在使用的内核编译external module:<br><code>make -C /lib/modules/&#39;uname -r&#39;/build M=$PWD</code></p>
+<p>在通过modules_install安装(只是将生成的ko移动到特定的目录下)刚刚编译的external modules<br><code>make -C /lib/modules/&#39;uname -r&#39;/build M=$PWD modules_install</code><br>modules_install会将生成的ko文件拷贝到/lib/modules/$(version)/extra/下，并通过depmod更新模块间的依赖信息modules.dep。<br>有了该信息，就可以通过<code>$ modprobe module_name</code>加载模块。</p>
+<h3 id="Make-target-in-Linux"><a href="#Make-target-in-Linux" class="headerlink" title="Make target in Linux"></a>Make target in Linux</h3><p>这里指的target是在编译命令中的target，如下所示：<br><code>make -C &amp;KDIR M=$PWD [target]</code></p>
+<p>在编译外部模块时，只有以下几个make targets是可用的。</p>
+<ul>
+<li>modules<br>  和make不带任何target的作用一样。</li>
+<li>modules_install<br>  安装externel module，默认的位置是/lib/modules/<kernel_release>/extra/，可以通过INSTALL_MOD_PATH指定路径。</kernel_release></li>
+<li>clean<br>  删除编译过程中所有的文件</li>
+<li>help<br>  列出external modules可用的targets</li>
+</ul>
+<h3 id="Build-Seperate-Files"><a href="#Build-Seperate-Files" class="headerlink" title="Build Seperate Files"></a>Build Seperate Files</h3><p>可以编译模块中一个单独的文件。该方法对于kernel, module, external module都适用。</p>
+<p>Example: (test.ko, consist of bar.o and baz.o)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ make -C $KDIR M=$PWD bar.o</span><br><span class="line">$ make -C $KDIR M=$PWD baz.o</span><br><span class="line">$ make -C $KDIR M=$PWD test.ko</span><br><span class="line">$ make -C $KDIR M=$PWD /</span><br></pre></td></tr></table></figure></p>
+<h2 id="为external-module创建kbuild-file"><a href="#为external-module创建kbuild-file" class="headerlink" title="为external module创建kbuild file"></a>为external module创建kbuild file</h2><h3 id="源文件为单个文件"><a href="#源文件为单个文件" class="headerlink" title="源文件为单个文件"></a>源文件为单个文件</h3><p><code>obj-m := &lt;module_name&gt;.o</code></p>
+<blockquote>
+<p>kbuild将根据module_name.c生成module_name.o，然后link生成module_name.ko.<br>上面这行命令即可以放在Kbuild文件中，也可以放在Makefile中。</p>
+</blockquote>
+<h3 id="源文件为多个文件"><a href="#源文件为多个文件" class="headerlink" title="源文件为多个文件"></a>源文件为多个文件</h3><p><code>obj-m := &lt;module_name&gt;.o</code><br><code>&lt;module_name&gt;-y := &lt;src1&gt;.o &lt;src2&gt;.o ...</code></p>
+<p>更多的用法请参考/Documentation/kbuild/makefiles.txt<br>以 module 8123.ko为例，包括4个文件</p>
+<ul>
+<li>8123_if.c</li>
+<li>8123_if.h</li>
+<li>8123_pci.c</li>
+<li>8123_bin.o_shipped</li>
+</ul>
+<h3 id="共享makefile"><a href="#共享makefile" class="headerlink" title="共享makefile"></a>共享makefile</h3><p>External module往往会搭配一个makefile文件，支持“make”命令编译module.</p>
+<p>makefile<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">ifneq ($(KERNELRELEASE),)</span><br><span class="line"># kbuild part of makefile</span><br><span class="line">obj-m  := <span class="number">8123.</span>o</span><br><span class="line"><span class="number">8123</span>-y := <span class="number">8123</span>_if.o <span class="number">8123</span>_pci.o <span class="number">8123</span>_bin.o</span><br><span class="line"></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line"># normal makefile</span><br><span class="line">KDIR ?= /lib/modules/`uname -r`/build</span><br><span class="line"></span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">	$(MAKE) -C $(KDIR) M=$$PWD</span><br><span class="line"></span><br><span class="line"># Module specific targets</span><br><span class="line">genbin:</span><br><span class="line">	echo <span class="string">"X"</span> &gt; <span class="number">8123</span>_bin.o_shipped</span><br><span class="line"></span><br><span class="line">endif</span><br></pre></td></tr></table></figure></p>
+<p>这个文件将Kbuild和Makefile合二为一，Kbuild是作为in-tree module编译时使用的命令。<br>当该module的文件被放到kernel目录下，kernle/Makefile中定义了KERNELRELEASE变量，就会执行前面的两行指令。</p>
+<p>在内核中编译模块时，使用<code>make modules</code>.</p>
+<p>else部分是作为external module的makefile.</p>
+<h3 id="单独的Kbuild和Makefile"><a href="#单独的Kbuild和Makefile" class="headerlink" title="单独的Kbuild和Makefile"></a>单独的Kbuild和Makefile</h3><p>Kbuild<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">obj-m  := <span class="number">8123.</span>o</span><br><span class="line"><span class="number">8123</span>-y := <span class="number">8123</span>_if.o <span class="number">8123</span>_pci.o <span class="number">8123</span>_bin.o</span><br></pre></td></tr></table></figure></p>
+<p>Makefile<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">KDIR ?= /lib/modules/`uname -r`/build</span><br><span class="line"></span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">    $(MAKE) -C $(KDIR) M=$$PWD</span><br><span class="line"></span><br><span class="line"># Module specific targets</span><br><span class="line">genbin:</span><br><span class="line">    echo <span class="string">"X"</span> &gt; <span class="number">8123</span>_bin.o_shipped</span><br></pre></td></tr></table></figure></p>
+<p>现在内核编译系统会先查找Kbuild, 再查找Makefile.</p>
+<h3 id="Binary-Blobs"><a href="#Binary-Blobs" class="headerlink" title="Binary Blobs"></a>Binary Blobs</h3><h3 id="生成多个modules"><a href="#生成多个modules" class="headerlink" title="生成多个modules"></a>生成多个modules</h3><p>obj-m := foo.o bar.o<br>foo-y := <foo><br>bar-y := <bar></bar></foo></p>
+<h2 id="include"><a href="#include" class="headerlink" title="include"></a>include</h2><p>规则：</p>
+<ul>
+<li>1 头文件如果只包含模块内部使用的api，那么和源文件放在同一目录就可以了.</li>
+<li>2 如果头文件需要被kernel的其他部分所引用，那么应该放在include/linux中</li>
+</ul>
+<p>例外：<br>在比较大型的子系统中，有自己的include目录: include，架构相关的头文件同样有自己的目录：arch/$(ARCH)/include</p>
+<h3 id="头文件的include"><a href="#头文件的include" class="headerlink" title="头文件的include"></a>头文件的include</h3><p>当文件中引用include/linux中的头文件时，仅需要<br><code>#include &lt;linux/module.h&gt;</code></p>
+<p>Kbuild系统将会给gcc添加对应的目录, 所以该目录将会被搜索。</p>
+<p>如果是某些特殊的头文件目录，可以通过<code>ccflags-y或者CFLAGS_&lt;filename&gt;.o</code>来通知Kbuild系统.</p>
+<p>Example, 其中include是头文件所在文件夹，和-I之间没有space<br>Kbuild<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">obj-m := <span class="number">8123.</span>o</span><br><span class="line"></span><br><span class="line">ccflags-y := -Iinclude</span><br><span class="line"><span class="number">8123</span>-y := <span class="number">8123</span>_if.o <span class="number">8123</span>_pci.o <span class="number">8123</span>_bin.o</span><br></pre></td></tr></table></figure></p>
+<h2 id="Module-Installation"><a href="#Module-Installation" class="headerlink" title="Module Installation"></a>Module Installation</h2><p>in-tree默认安装在/lib/modules/$(RELEASEKERNEL)/kernel<br>out-tree默认安装在/lib/modules/$(KERNELRELEASE)extra</p>
+<h3 id="INSTALL-MOD-PATH"><a href="#INSTALL-MOD-PATH" class="headerlink" title="INSTALL_MOD_PATH"></a>INSTALL_MOD_PATH</h3><p><code>$ make INSTALL_MOD_PATH=/path modules_install</code><br>当前安装目录：/path/lib/modules/$(KERNELRELEASE)/kernel</p>
+<h3 id="INSTALL-MOD-DIR"><a href="#INSTALL-MOD-DIR" class="headerlink" title="INSTALL_MOD_DIR"></a>INSTALL_MOD_DIR</h3><p><code>$ make INSTALL_MOD_DIR=path modules_install</code><br>当前安装目录：/lib/modules/$(KERNELRELEASE)/path</p>
+<h1 id="Simple-driver-module-example"><a href="#Simple-driver-module-example" class="headerlink" title="Simple driver module example"></a>Simple driver module example</h1><p>参考代码：<a href="https://github.com/hoastyle/Learn/tree/master/Linux/driver/Exercise/hello/simple" target="_blank" rel="external">simple driver</a><br>简单字符设备参考代码：<a href="https://github.com/hoastyle/Learn/tree/master/Linux/driver/Exercise/hello/char" target="_blank" rel="external">char driver</a></p>
+<p>其中，选择重要的部分进行说明。</p>
+<h2 id="模块中的基本头文件"><a href="#模块中的基本头文件" class="headerlink" title="模块中的基本头文件"></a>模块中的基本头文件</h2><p>以下三个头文件是必须的<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/kernel.h&gt;</span></span></span><br></pre></td></tr></table></figure></p>
+<p>init.h定义了驱动初始化和退出相关的函数。<br>module.h定义了模块相关的函数、变量以及宏。<br>kernel.h定义了经常用到的函数原型以及宏。</p>
+<h2 id="module-init-amp-module-exit"><a href="#module-init-amp-module-exit" class="headerlink" title="module_init &amp; module_exit"></a>module_init &amp; module_exit</h2><p>基本上每个Linux驱动中都有module_init和module_exit.</p>
+<p>其作用是根据需求添加对应的module初始化函数。<br>那么为什么不直接加在统一的初始化函数中呢？(在前面的文章中提到过类似的统一初始化函数driver_init)。<br>通过这种方式，可以分离出统一的初始化函数。新增驱动的初始化函数只需要通过该宏加入系统中即可，而不用每次修改统一的初始化函数，增强了系统的灵活性，可移植性，也使其层次更明晰。并且，通过这种方式，可以灵活的定义驱动初始化的优先级。</p>
+<p>module_init定义于module.h中，如下<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*<span class="keyword">initcall_t</span>)</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __define_initcall(fn, id) \</span><br><span class="line">	static initcall_t __initcall_##fd_##id __used \</span><br><span class="line">	__attribute__ ((__section__(<span class="string">".initcall"</span> #id <span class="string">".init"</span>))) = fn;</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> device_initcall(x) __define_initcall(x, 6)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __initcall(x) device_initcall(x)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> module_init(x) __initcall(x)</span></span><br></pre></td></tr></table></figure></p>
+<p>如module_init(i2c_init)，预处理之后实际上是<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">initcall_t</span> __initcall_i2c_init_6 __used __attribute__((__section(<span class="string">".initcall"</span> #id <span class="string">".init"</span>)))` = fn;</span><br></pre></td></tr></table></figure></p>
+<p>其含义就是将__initcall_i2c_init_6这个函数定义到.initcall6.init这个段中。</p>
+<blockquote>
+<p>坑1， 看gcc section相关文章</p>
+</blockquote>
+<p>而.initcall6.init段定义include/asm-generic/vmlinux.lds.h<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> INIT_CALLS                          \</span><br><span class="line">        VMLINUX_SYMBOL(__initcall_start) = .;           \</span><br><span class="line">        *(.initcallearly.init)                  \</span><br><span class="line">        INIT_CALLS_LEVEL(0)                 \</span><br><span class="line">        INIT_CALLS_LEVEL(1)                 \</span><br><span class="line">        INIT_CALLS_LEVEL(2)                 \</span><br><span class="line">        INIT_CALLS_LEVEL(3)                 \</span><br><span class="line">        INIT_CALLS_LEVEL(4)                 \</span><br><span class="line">        INIT_CALLS_LEVEL(5)                 \</span><br><span class="line">        INIT_CALLS_LEVEL(rootfs)                \</span><br><span class="line">        INIT_CALLS_LEVEL(6)                 \</span><br><span class="line">        INIT_CALLS_LEVEL(7)                 \</span><br><span class="line">        VMLINUX_SYMBOL(__initcall_end) = .;</span></span><br></pre></td></tr></table></figure></p>
+<p>而在arch/arm/kernel/vmlinux.lds.S中，会调用INIT_CALLS<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">    .init.data : &#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> CONFIG_XIP_KERNEL</span></span><br><span class="line">        INIT_DATA</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">        INIT_SETUP(<span class="number">16</span>)</span><br><span class="line">        INIT_CALLS</span><br><span class="line">        CON_INITCALL</span><br><span class="line">        SECURITY_INITCALL</span><br><span class="line">        INIT_RAM_FS</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> CONFIG_XIP_KERNEL</span></span><br><span class="line">    .<span class="built_in">exit</span>.data : &#123;</span><br><span class="line">        ARM_EXIT_KEEP(EXIT_DATA)</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure></p>
+<p>initcall分为多个等级，其他的等级定义宏也都在init.h中定义<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> pure_initcall(fn)       __define_initcall(fn, 0)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> core_initcall(fn)       __define_initcall(fn, 1)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> core_initcall_sync(fn)      __define_initcall(fn, 1s)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> postcore_initcall(fn)       __define_initcall(fn, 2)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> postcore_initcall_sync(fn)  __define_initcall(fn, 2s)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> arch_initcall(fn)       __define_initcall(fn, 3)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> arch_initcall_sync(fn)      __define_initcall(fn, 3s)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> subsys_initcall(fn)     __define_initcall(fn, 4)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> subsys_initcall_sync(fn)    __define_initcall(fn, 4s)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> fs_initcall(fn)         __define_initcall(fn, 5)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> fs_initcall_sync(fn)        __define_initcall(fn, 5s)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> rootfs_initcall(fn)     __define_initcall(fn, rootfs)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> device_initcall(fn)     __define_initcall(fn, 6)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> device_initcall_sync(fn)    __define_initcall(fn, 6s)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> late_initcall(fn)       __define_initcall(fn, 7)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> late_initcall_sync(fn)      __define_initcall(fn, 7s)</span></span><br></pre></td></tr></table></figure></p>
+<p>这些初始化函数都会在do_initcalls中调用，其调用先后顺序取决于initcall中的等级，级别越小，调用越早。</p>
+<p>而级别如何确定，do_initcalls处于初始化的哪一个部分，将在分析Linux初始化文章中详细说明。</p>
+<blockquote>
+<p>坑2， 初始化系列文章</p>
+</blockquote>
+<h1 id="What-is-module"><a href="#What-is-module" class="headerlink" title="What is module?"></a>What is module?</h1><h2 id="module的结构"><a href="#module的结构" class="headerlink" title="module的结构"></a>module的结构</h2><p>通过上面的example可以编译得到char.ko.<br><code>$ file char.ko</code><br>输出信息<br><code>char.ko: ELF 64-bit LSB  relocatable, x86-64, version 1 (SYSV), BuildID[sha1]=9d786825c5b731e712f3cff0c78ead53b9351692, not stripped</code></p>
+<p>可以知道module以ELF的格式存在。</p>
+<p>ELF的格式</p>
+<ul>
+<li>header: 信息 + 指向section header table</li>
+<li>section: </li>
+<li>section header table: 指向section</li>
+</ul>
+<p>详情参考《程序员的自我修养-链接、装载与库》</p>
+<h2 id="模块的动态加载和动态卸载"><a href="#模块的动态加载和动态卸载" class="headerlink" title="模块的动态加载和动态卸载"></a>模块的动态加载和动态卸载</h2><h3 id="动态加载"><a href="#动态加载" class="headerlink" title="动态加载"></a>动态加载</h3><p>切入点当然是<code>insmod char.ko</code>，可以通过strace追踪该命令究竟做了什么。</p>
+<p>分析方法： strace + insmod的实现（busybox/modutils/insmod.c）</p>
+<p>insmod -&gt; init_module -&gt; kernel/module.c: sys_init_module<br>    copy from user<br>    load_module</p>
+<h3 id="动态卸载"><a href="#动态卸载" class="headerlink" title="动态卸载"></a>动态卸载</h3><p>EXPORT_SYMBOL</p>
+<h1 id="module-and-Linux"><a href="#module-and-Linux" class="headerlink" title="module and Linux"></a>module and Linux</h1><h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a href="http://blog.jobbole.com/72115/" target="_blank" rel="external">编写属于你的第一个Linux内核模块</a></li>
+<li>/Documentation/kbuild/module.txt</li>
+</ul>
+<h1 id="Licence"><a href="#Licence" class="headerlink" title="Licence"></a>Licence</h1><p>GPL2</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/driver/" rel="tag">#driver</a>
+          
+            <a href="/tags/Linux/" rel="tag">#Linux</a>
+          
+            <a href="/tags/module/" rel="tag">#module</a>
+          
+            <a href="/tags/external/" rel="tag">#external</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/06/20/c语言学习框架/" rel="next" title="c语言学习框架">
+                <i class="fa fa-chevron-left"></i> c语言学习框架
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/07/01/Linux/Driver/Char-Device-Driver-in-Linux/" rel="prev" title="Char Device Driver in Linux">
+                Char Device Driver in Linux <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/06/28/Linux/Basic/Write-a-simple-module-in-Linux/"
+           data-title="Write a simple module in Linux" data-url="hoastyle.github.io/2016/06/28/Linux/Basic/Write-a-simple-module-in-Linux/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/兔子.JPG"
+               alt="Hao(梁浩)" />
+          <p class="site-author-name" itemprop="name">Hao(梁浩)</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">16</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#module的简单介绍"><span class="nav-number">1.</span> <span class="nav-text">module的简单介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#在Linux中编译module"><span class="nav-number">2.</span> <span class="nav-text">在Linux中编译module</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#How-to-Build-External-Modules"><span class="nav-number">2.1.</span> <span class="nav-text">How to Build External Modules</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#编译模块的相关命令"><span class="nav-number">2.1.1.</span> <span class="nav-text">编译模块的相关命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Make-target-in-Linux"><span class="nav-number">2.1.2.</span> <span class="nav-text">Make target in Linux</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Build-Seperate-Files"><span class="nav-number">2.1.3.</span> <span class="nav-text">Build Seperate Files</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为external-module创建kbuild-file"><span class="nav-number">2.2.</span> <span class="nav-text">为external module创建kbuild file</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#源文件为单个文件"><span class="nav-number">2.2.1.</span> <span class="nav-text">源文件为单个文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源文件为多个文件"><span class="nav-number">2.2.2.</span> <span class="nav-text">源文件为多个文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#共享makefile"><span class="nav-number">2.2.3.</span> <span class="nav-text">共享makefile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#单独的Kbuild和Makefile"><span class="nav-number">2.2.4.</span> <span class="nav-text">单独的Kbuild和Makefile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binary-Blobs"><span class="nav-number">2.2.5.</span> <span class="nav-text">Binary Blobs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#生成多个modules"><span class="nav-number">2.2.6.</span> <span class="nav-text">生成多个modules</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#include"><span class="nav-number">2.3.</span> <span class="nav-text">include</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#头文件的include"><span class="nav-number">2.3.1.</span> <span class="nav-text">头文件的include</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Module-Installation"><span class="nav-number">2.4.</span> <span class="nav-text">Module Installation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#INSTALL-MOD-PATH"><span class="nav-number">2.4.1.</span> <span class="nav-text">INSTALL_MOD_PATH</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#INSTALL-MOD-DIR"><span class="nav-number">2.4.2.</span> <span class="nav-text">INSTALL_MOD_DIR</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Simple-driver-module-example"><span class="nav-number">3.</span> <span class="nav-text">Simple driver module example</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#模块中的基本头文件"><span class="nav-number">3.1.</span> <span class="nav-text">模块中的基本头文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#module-init-amp-module-exit"><span class="nav-number">3.2.</span> <span class="nav-text">module_init & module_exit</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#What-is-module"><span class="nav-number">4.</span> <span class="nav-text">What is module?</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#module的结构"><span class="nav-number">4.1.</span> <span class="nav-text">module的结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#模块的动态加载和动态卸载"><span class="nav-number">4.2.</span> <span class="nav-text">模块的动态加载和动态卸载</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#动态加载"><span class="nav-number">4.2.1.</span> <span class="nav-text">动态加载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#动态卸载"><span class="nav-number">4.2.2.</span> <span class="nav-text">动态卸载</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#module-and-Linux"><span class="nav-number">5.</span> <span class="nav-text">module and Linux</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Licence"><span class="nav-number">7.</span> <span class="nav-text">Licence</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao(梁浩)</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<span id="busuanzi_container_site_pv">
+  &nbsp; | &nbsp; 本站总访问量<span id="busuanzi_value_site_pv"></span>次
+</span>
+
+<span id="busuanzi_container_site_uv">
+  &nbsp; | &nbsp; 本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"hoastyle"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

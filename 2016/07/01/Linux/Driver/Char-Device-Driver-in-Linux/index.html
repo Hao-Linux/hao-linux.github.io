@@ -1,0 +1,775 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta name="baidu-site-verification" content="wtiIcSmt3U" />
+<meta name="google-site-verification" content="XD6-y8mgHOkN3DXdrUw4WwjPFkDrTcvkoyo7rLipzrQ" />
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext/css?family=Monda:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="driver,Linux,module,char," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/zero.png?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="字符型设备驱动介绍字符设备主要是给一些传输速率较低，主要用于控制的设备所使用的驱动框架。如鼠标，键盘，打印机。
+字符设备驱动基本结构和APIcdev的代码在/fs/char_dev.c中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Char Device Driver in Linux">
+<meta property="og:url" content="hoastyle.github.io/2016/07/01/Linux/Driver/Char-Device-Driver-in-Linux/index.html">
+<meta property="og:site_name" content="IoE">
+<meta property="og:description" content="字符型设备驱动介绍字符设备主要是给一些传输速率较低，主要用于控制的设备所使用的驱动框架。如鼠标，键盘，打印机。
+字符设备驱动基本结构和APIcdev的代码在/fs/char_dev.c中">
+<meta property="og:updated_time" content="2017-03-26T03:13:52.361Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Char Device Driver in Linux">
+<meta name="twitter:description" content="字符型设备驱动介绍字符设备主要是给一些传输速率较低，主要用于控制的设备所使用的驱动框架。如鼠标，键盘，打印机。
+字符设备驱动基本结构和APIcdev的代码在/fs/char_dev.c中">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> Char Device Driver in Linux | IoE </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">IoE</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Char Device Driver in Linux
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-01T00:19:24+08:00" content="2016-07-01">
+              2016-07-01
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/" itemprop="url" rel="index">
+                    <span itemprop="name">Tech</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/" itemprop="url" rel="index">
+                    <span itemprop="name">OS</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/" itemprop="url" rel="index">
+                    <span itemprop="name">Driver</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/07/01/Linux/Driver/Char-Device-Driver-in-Linux/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/07/01/Linux/Driver/Char-Device-Driver-in-Linux/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+  			  <span id="busuanzi_container_page_pv">  |  阅读量 <span id="busuanzi_value_page_pv"></span> 次</span>
+		  
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="字符型设备驱动介绍"><a href="#字符型设备驱动介绍" class="headerlink" title="字符型设备驱动介绍"></a>字符型设备驱动介绍</h1><p>字符设备主要是给一些传输速率较低，主要用于控制的设备所使用的驱动框架。<br>如鼠标，键盘，打印机。</p>
+<h1 id="字符设备驱动基本结构和API"><a href="#字符设备驱动基本结构和API" class="headerlink" title="字符设备驱动基本结构和API"></a>字符设备驱动基本结构和API</h1><p>cdev的代码在/fs/char_dev.c中</p>
+<a id="more"></a>
+<h2 id="重要结构"><a href="#重要结构" class="headerlink" title="重要结构"></a>重要结构</h2><p>struct cdev<br>dev_t num<br>struct file_operations</p>
+<h2 id="基本API"><a href="#基本API" class="headerlink" title="基本API"></a>基本API</h2><ul>
+<li>cdev_init<blockquote>
+<p>cdev_init(&amp;cdev, &amp;cdev_ops)</p>
+</blockquote>
+</li>
+<li>cdev_clloc(void)</li>
+<li>alloc_chrdev_region, 分配设备号<br>alloc_chrdev_region($num, baseminor, count, char *name)</li>
+<li>cdev_add</li>
+<li>cdev_del</li>
+<li>unregister_chrdev_region()</li>
+</ul>
+<h1 id="一些值得探讨的问题"><a href="#一些值得探讨的问题" class="headerlink" title="一些值得探讨的问题"></a>一些值得探讨的问题</h1><ul>
+<li>字符设备驱动适用于速度较慢的，为什么？为什么字符设备适合速度慢的？块设备驱动适合速度快的？</li>
+<li>owner和THIS_MODULE的作用？</li>
+<li>设备号的分配和释放实现流程<blockquote>
+<p>通过一个哈希表</p>
+</blockquote>
+</li>
+<li>cdev框架背后的实现流程<blockquote>
+<p>通过哈希表cdev_map</p>
+</blockquote>
+</li>
+<li>ioctl</li>
+<li>module_init &amp;&amp; module_ext</li>
+<li>/dev目录相关<ul>
+<li>如何从/dev/node 到 file_operation相应函数</li>
+<li>/dev和cdev是什么关系？在/dev下面只有block和char设备？</li>
+</ul>
+</li>
+</ul>
+<h2 id="设备号的分配和释放实现流程"><a href="#设备号的分配和释放实现流程" class="headerlink" title="设备号的分配和释放实现流程"></a>设备号的分配和释放实现流程</h2><blockquote>
+<p>设备号的作用是什么？</p>
+</blockquote>
+<h3 id="设备号的构成"><a href="#设备号的构成" class="headerlink" title="设备号的构成"></a>设备号的构成</h3><p>dev_t，是设备号的类型，无符号整数<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//on arm processor，增加可移植性</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> _u32;</span><br><span class="line"><span class="comment">//保证和文件中其他类型保证风格一致</span></span><br><span class="line"><span class="keyword">typedef</span> _u32 <span class="keyword">_kernel_dev_t</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">_kernel_dev_t</span> <span class="keyword">dev_t</span></span><br></pre></td></tr></table></figure></p>
+<p>dev_t中，高12位是major, 低20位时minor.<br>相关的宏有MKDEV, MINOR, MAJOR(位于/include/linux/kdev_t.h)，通过移位实现其功能。</p>
+<p>其中，major用来定位设备驱动程序，minor用来表示驱动程序所管理的若干设备。</p>
+<h2 id="设备号的分配和释放"><a href="#设备号的分配和释放" class="headerlink" title="设备号的分配和释放"></a>设备号的分配和释放</h2><p>既然设备号需要分配和释放，那么设备号是需要被管理的，其使用状态需要被检测。<br>检测设备号，需要哪些信息呢？</p>
+<ul>
+<li>major</li>
+<li>minor base</li>
+<li>minor count<br>另外，需要和cdev结合起来</li>
+<li>cdev</li>
+</ul>
+<p>以上，应该是基本的元素。<br>在Linux中，选择哈希表作为管理设备号的手段。</p>
+<p>其中主要的结构是<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> char_device_struct &#123;</span><br><span class="line">    <span class="keyword">struct</span> char_device_struct *next;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> major;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> baseminor;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> minorct;</span><br><span class="line">    <span class="keyword">char</span> name[<span class="number">64</span>];</span><br><span class="line">    <span class="keyword">struct</span> cdev *cdev;</span><br><span class="line">&#125; *chrdevs[CHRDEV_MAJOR_HASH_SIZE];</span><br></pre></td></tr></table></figure></p>
+<p>初始化指向该结构的指针数组，大小为255. 通过index = major/255为索引，确认对应的char_device_struct指针。<br>如果该指针没有被使用，为NULL.<br>如果被使用，那么将会指向对应的char_device_struct。如果有多个驱动使用：</p>
+<ul>
+<li>major相同，此设备号不冲突，则多个设备驱动以链表设备存在</li>
+<li>major不同，但是index不同，如2和257，则通过插入排序链接到对应的指针上，排序方向是从小到大。</li>
+</ul>
+<h2 id="字符设备的框架实现"><a href="#字符设备的框架实现" class="headerlink" title="字符设备的框架实现"></a>字符设备的框架实现</h2><h3 id="字符设备的注册"><a href="#字符设备的注册" class="headerlink" title="字符设备的注册"></a>字符设备的注册</h3><p>cdev_add函数负责将字符设备加入系统。</p>
+<p>基本原理：<br>字符设备的管理，同样通过哈希表完成。定义probe指针数组，数组每个指针成员对应major/index相同的设备。cdev_add就是将cdev加入哈希表中。</p>
+<p>实现分析：<br>核心结构体<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> kobj_map &#123;</span><br><span class="line">    <span class="keyword">struct</span> probe &#123;</span><br><span class="line">        <span class="keyword">struct</span> probe *next;</span><br><span class="line">        <span class="keyword">dev_t</span> dev;</span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">long</span> range;</span><br><span class="line">        <span class="keyword">struct</span> module *owner;</span><br><span class="line">        <span class="keyword">kobj_probe_t</span> *get;</span><br><span class="line">        <span class="keyword">int</span> (*lock)(<span class="keyword">dev_t</span>, <span class="keyword">void</span> *);</span><br><span class="line">        <span class="comment">//为什么不是cdev,应为不仅仅cdev用到这个模型</span></span><br><span class="line">        <span class="keyword">void</span> *data;</span><br><span class="line">    &#125; *probes[<span class="number">255</span>];</span><br><span class="line">    <span class="keyword">struct</span> mutex *lock;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>其中，定义了大小为255，类型为struct probe的数组指针。在字符设备框架中，每个probe对应一个字符设备（还是驱动？）。</p>
+<h2 id="字符设备和用户空间的交互"><a href="#字符设备和用户空间的交互" class="headerlink" title="字符设备和用户空间的交互"></a>字符设备和用户空间的交互</h2><blockquote>
+<p>字符设备和用户空间的交互，通过设备文件来实现。<br>根据设备类型、设备号建立设备文件，其根本是建立一个inode结构体，inode-&gt;fops根据设备类型初始化为不同的fops，inode-&gt;rdev初始化为设备号。<br>而打开设备文件的过程，就是将字符设备和设备文件相互联系的过程。open最后会调用到 chrdev_open，其中会根据设备号查找到对应的cdev，并覆盖flip中的fops, 然后调用cdev-&gt;open函数。</p>
+</blockquote>
+<p>以上的过程中，省略了很多细节，下面详细说明。</p>
+<h3 id="建立设备节点"><a href="#建立设备节点" class="headerlink" title="建立设备节点"></a>建立设备节点</h3><p>对于字符设备，设备节点往往是用户自己在用户空间生成。<br>如example中的hello char device，其主设备号为246， 此设备号为0。<br><code>$ mknod /dev/chr_dev c 246 0</code></p>
+<p>分析上面的这个命令，首先可以通过strace命令track mknod命令究竟做了什么。<br>执行<code>sudo strace mknod /dev/chr_dev c 246 0</code><br>该命令来自于busybox/coreutils/mknod.c<br>其中，和讨论内容有关的部分如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">execve(<span class="string">"/bin/mknod"</span>, [<span class="string">"mknod"</span>, <span class="string">"/dev/chr_dev"</span>, <span class="string">"c"</span>, <span class="string">"246"</span>, <span class="string">"0"</span>], [<span class="comment">/* 25 vars */</span>]) = <span class="number">0</span></span><br><span class="line">...</span><br><span class="line">mknod(<span class="string">"/dev/chr_dev"</span>, S_IFCHR|<span class="number">0666</span>, makedev(<span class="number">246</span>, <span class="number">0</span>)) = <span class="number">0</span></span><br></pre></td></tr></table></figure></p>
+<p>可见mknod命令最终通过mknod函数实现。mknod的定义：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE3(mknod, <span class="keyword">const</span> <span class="keyword">char</span> __user *, filename, <span class="keyword">umode_t</span>, mode, <span class="keyword">unsigned</span>, dev)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> sys_mknodat(AT_FDCWD, filename, mode, dev);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>而sys_mknodat的定义如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">&lt;fs/namei.c&gt;</span><br><span class="line">SYSCALL_DEFINE4(mknodat, <span class="keyword">int</span>, dfd, <span class="keyword">const</span> <span class="keyword">char</span> __user *, filename, <span class="keyword">umode_t</span>, mode,</span><br><span class="line">        <span class="keyword">unsigned</span>, dev)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">struct</span> dentry *dentry;</span><br><span class="line">    <span class="keyword">struct</span> path path;</span><br><span class="line">    <span class="keyword">int</span> error;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> lookup_flags = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    error = may_mknod(mode);</span><br><span class="line">    <span class="keyword">if</span> (error)</span><br><span class="line">        <span class="keyword">return</span> error;</span><br><span class="line">retry:</span><br><span class="line">    dentry = user_path_create(dfd, filename, &amp;path, lookup_flags);</span><br><span class="line">    <span class="keyword">if</span> (IS_ERR(dentry))</span><br><span class="line">        <span class="keyword">return</span> PTR_ERR(dentry);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!IS_POSIXACL(path.dentry-&gt;d_inode))</span><br><span class="line">        mode &amp;= ~current_umask();</span><br><span class="line">    error = security_path_mknod(&amp;path, dentry, mode, dev);</span><br><span class="line">    <span class="keyword">if</span> (error)</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line">    <span class="keyword">switch</span> (mode &amp; S_IFMT) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>: <span class="keyword">case</span> S_IFREG:</span><br><span class="line">            error = vfs_create(path.dentry-&gt;d_inode,dentry,mode,<span class="literal">true</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> S_IFCHR: <span class="keyword">case</span> S_IFBLK:</span><br><span class="line">            error = vfs_mknod(path.dentry-&gt;d_inode,dentry,mode,</span><br><span class="line">                    new_decode_dev(dev));</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> S_IFIFO: <span class="keyword">case</span> S_IFSOCK:</span><br><span class="line">            error = vfs_mknod(path.dentry-&gt;d_inode,dentry,mode,<span class="number">0</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">out:</span><br><span class="line">    done_path_create(&amp;path, dentry);</span><br><span class="line">    <span class="keyword">if</span> (retry_estale(error, lookup_flags)) &#123;</span><br><span class="line">        lookup_flags |= LOOKUP_REVAL;</span><br><span class="line">        <span class="keyword">goto</span> retry;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> error;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中涉及到文件系统的暂时略去，sys_mknodat通过/dev目录上挂载的文件系统接口为/dev/chr_dev生成了一个新的inode，并将设备号对其进行初始化。</p>
+<p>具体过程如下：<br>假设根文件系统ext3</p>
+<ul>
+<li>从根目录下寻找dev目录所对应的inode</li>
+<li>通过dev的inode的结构中的i_op成员指针所指向的ext3_dir_inode_operations，调用其中的mknod方法，会导致ext3_mknod函数被调用</li>
+<li>在ext3_mknod中调用init_special_inode函数，会根据节点类型对i_fop进行不同的初始化。<ul>
+<li>char: inode-&gt;i_fop = &amp;def_chr_ops, inode-&gt;rdev = rdev;(设备号)</li>
+<li>blk: inode-&gt;i_fop = &amp;def_blk_ops</li>
+<li>另外还有fifo和socket(略过)</li>
+</ul>
+</li>
+</ul>
+<p>以上，是建立/dev/node的过程，那么node是如何和对应的cdev建立联系的呢？</p>
+<h3 id="连接设备结点和cdev"><a href="#连接设备结点和cdev" class="headerlink" title="连接设备结点和cdev"></a>连接设备结点和cdev</h3><p>操作结点之前，需要通过open打开设备文件。<br><code>int open(const char *filename, int flags, mode_t mode)</code></p>
+<p>系统会从用户空间的open调用到file_operations中的open函数。<br>用户空间open的返回值是int fd, 而在file_operations中的函数第一个参数是struct file *flip，而真正的重点是file_operations，被存储在cdev-&gt;fops中，所以，将上述三个部分联系起来是重点。</p>
+<p>inode, fd, file之间的关系：<br>Linux文件系统中，每个文件都有一个inode与之相对应。Linux进程会为自己打开的文件维护一个文件描述表，其类型是struct file，通过动态分配的fd进行索引。</p>
+<p>在open之后，fd, flip, fops已经各就各位，通过fd可以找到对应的flip，而flip-&gt;ops就是cdev-&gt;ops，接下来就可以 愉快的玩耍了。</p>
+<p>上面说的是open, 接下来说说close函数。</p>
+<p>close<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">close(fd)</span><br><span class="line">    -&gt; sys_close(fd)</span><br><span class="line">        filp = current-&gt;files-&gt;fdt-&gt;fd[fd]</span><br><span class="line">        filp_close(filp, files)</span><br><span class="line">            <span class="comment">//对块设备很重要，字符设备无需使用缓存机制</span></span><br><span class="line">            filp-&gt;fops-&gt;flush</span><br><span class="line">            <span class="comment">//如果count == 0，则调用release函数</span></span><br><span class="line">            fput(file)</span><br></pre></td></tr></table></figure></p>
+<p>以上是字符设备操作的相关基本流程。</p>
+<h2 id="字符设备驱动中的一些高级操作"><a href="#字符设备驱动中的一些高级操作" class="headerlink" title="字符设备驱动中的一些高级操作"></a>字符设备驱动中的一些高级操作</h2><h3 id="ioctl"><a href="#ioctl" class="headerlink" title="ioctl"></a>ioctl</h3><h4 id="ioctl的使用方式"><a href="#ioctl的使用方式" class="headerlink" title="ioctl的使用方式"></a>ioctl的使用方式</h4><h4 id="ioctl调用流程"><a href="#ioctl调用流程" class="headerlink" title="ioctl调用流程"></a>ioctl调用流程</h4><h4 id="ioctl的命令"><a href="#ioctl的命令" class="headerlink" title="ioctl的命令"></a>ioctl的命令</h4>
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/driver/" rel="tag">#driver</a>
+          
+            <a href="/tags/Linux/" rel="tag">#Linux</a>
+          
+            <a href="/tags/module/" rel="tag">#module</a>
+          
+            <a href="/tags/char/" rel="tag">#char</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/06/28/Linux/Basic/Write-a-simple-module-in-Linux/" rel="next" title="Write a simple module in Linux">
+                <i class="fa fa-chevron-left"></i> Write a simple module in Linux
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/07/01/Linux/Driver/Char-Device-Driver-in-Linux/"
+           data-title="Char Device Driver in Linux" data-url="hoastyle.github.io/2016/07/01/Linux/Driver/Char-Device-Driver-in-Linux/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/兔子.JPG"
+               alt="Hao(梁浩)" />
+          <p class="site-author-name" itemprop="name">Hao(梁浩)</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">16</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#字符型设备驱动介绍"><span class="nav-number">1.</span> <span class="nav-text">字符型设备驱动介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#字符设备驱动基本结构和API"><span class="nav-number">2.</span> <span class="nav-text">字符设备驱动基本结构和API</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#重要结构"><span class="nav-number">2.1.</span> <span class="nav-text">重要结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本API"><span class="nav-number">2.2.</span> <span class="nav-text">基本API</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一些值得探讨的问题"><span class="nav-number">3.</span> <span class="nav-text">一些值得探讨的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#设备号的分配和释放实现流程"><span class="nav-number">3.1.</span> <span class="nav-text">设备号的分配和释放实现流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#设备号的构成"><span class="nav-number">3.1.1.</span> <span class="nav-text">设备号的构成</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设备号的分配和释放"><span class="nav-number">3.2.</span> <span class="nav-text">设备号的分配和释放</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符设备的框架实现"><span class="nav-number">3.3.</span> <span class="nav-text">字符设备的框架实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字符设备的注册"><span class="nav-number">3.3.1.</span> <span class="nav-text">字符设备的注册</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符设备和用户空间的交互"><span class="nav-number">3.4.</span> <span class="nav-text">字符设备和用户空间的交互</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#建立设备节点"><span class="nav-number">3.4.1.</span> <span class="nav-text">建立设备节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#连接设备结点和cdev"><span class="nav-number">3.4.2.</span> <span class="nav-text">连接设备结点和cdev</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符设备驱动中的一些高级操作"><span class="nav-number">3.5.</span> <span class="nav-text">字符设备驱动中的一些高级操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ioctl"><span class="nav-number">3.5.1.</span> <span class="nav-text">ioctl</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ioctl的使用方式"><span class="nav-number">3.5.1.1.</span> <span class="nav-text">ioctl的使用方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ioctl调用流程"><span class="nav-number">3.5.1.2.</span> <span class="nav-text">ioctl调用流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ioctl的命令"><span class="nav-number">3.5.1.3.</span> <span class="nav-text">ioctl的命令</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao(梁浩)</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<span id="busuanzi_container_site_pv">
+  &nbsp; | &nbsp; 本站总访问量<span id="busuanzi_value_site_pv"></span>次
+</span>
+
+<span id="busuanzi_container_site_uv">
+  &nbsp; | &nbsp; 本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"hoastyle"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

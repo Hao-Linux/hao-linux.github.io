@@ -1,0 +1,873 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta name="baidu-site-verification" content="wtiIcSmt3U" />
+<meta name="google-site-verification" content="XD6-y8mgHOkN3DXdrUw4WwjPFkDrTcvkoyo7rLipzrQ" />
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext/css?family=Monda:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/zero.png?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="bus, device, driver作为整个系列文章的第四篇，将会介绍Linux设备驱动模型的中层抽象，也就是bus、device、driver.
+bus总线(bus)是处理器和一个或者多个设备之间的通道。在设备模型中，所有的设备都通过总线连接。总线既可以是实际物理总线（I2C等）的抽象，也可以是处于Linux设备驱动模型架构需要而虚拟出的”平台总线“。
+符合Linux设备驱动模型的device">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux设备驱动模型系列 - 4 bus, device, driver篇">
+<meta property="og:url" content="hoastyle.github.io/2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-4-bus-device-driver篇/index.html">
+<meta property="og:site_name" content="IoE">
+<meta property="og:description" content="bus, device, driver作为整个系列文章的第四篇，将会介绍Linux设备驱动模型的中层抽象，也就是bus、device、driver.
+bus总线(bus)是处理器和一个或者多个设备之间的通道。在设备模型中，所有的设备都通过总线连接。总线既可以是实际物理总线（I2C等）的抽象，也可以是处于Linux设备驱动模型架构需要而虚拟出的”平台总线“。
+符合Linux设备驱动模型的device">
+<meta property="og:updated_time" content="2017-03-26T03:13:52.361Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux设备驱动模型系列 - 4 bus, device, driver篇">
+<meta name="twitter:description" content="bus, device, driver作为整个系列文章的第四篇，将会介绍Linux设备驱动模型的中层抽象，也就是bus、device、driver.
+bus总线(bus)是处理器和一个或者多个设备之间的通道。在设备模型中，所有的设备都通过总线连接。总线既可以是实际物理总线（I2C等）的抽象，也可以是处于Linux设备驱动模型架构需要而虚拟出的”平台总线“。
+符合Linux设备驱动模型的device">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> Linux设备驱动模型系列 - 4 bus, device, driver篇 | IoE </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">IoE</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Linux设备驱动模型系列 - 4 bus, device, driver篇
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-19T23:30:34+08:00" content="2016-06-19">
+              2016-06-19
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/" itemprop="url" rel="index">
+                    <span itemprop="name">Tech</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/" itemprop="url" rel="index">
+                    <span itemprop="name">OS</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/" itemprop="url" rel="index">
+                    <span itemprop="name">Driver</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/Framework/" itemprop="url" rel="index">
+                    <span itemprop="name">Framework</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/Framework/Linux设备驱动模型/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux设备驱动模型</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-4-bus-device-driver篇/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-4-bus-device-driver篇/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+  			  <span id="busuanzi_container_page_pv">  |  阅读量 <span id="busuanzi_value_page_pv"></span> 次</span>
+		  
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>bus, device, driver作为整个系列文章的第四篇，将会介绍Linux设备驱动模型的中层抽象，也就是bus、device、driver.</p>
+<h1 id="bus"><a href="#bus" class="headerlink" title="bus"></a>bus</h1><p>总线(bus)是处理器和一个或者多个设备之间的通道。在设备模型中，所有的设备都通过总线连接。总线既可以是实际物理总线（I2C等）的抽象，也可以是处于Linux设备驱动模型架构需要而虚拟出的”平台总线“。</p>
+<p>符合Linux设备驱动模型的<strong>device</strong>和<strong>driver</strong>必须挂载在同一根总线上。</p>
+<a id="more"></a>
+<h2 id="bus的抽象结构"><a href="#bus的抽象结构" class="headerlink" title="bus的抽象结构"></a>bus的抽象结构</h2><p>总线的抽象数据结构为bus_type<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> bus_type &#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>      *name;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>      *dev_name;</span><br><span class="line">    <span class="keyword">struct</span> device       *dev_root;</span><br><span class="line">    <span class="keyword">struct</span> device_attribute *dev_attrs; <span class="comment">/* use dev_groups instead */</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> attribute_group **bus_groups;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> attribute_group **dev_groups;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> attribute_group **drv_groups;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> (*match)(<span class="keyword">struct</span> device *dev, <span class="keyword">struct</span> device_driver *drv);</span><br><span class="line">    <span class="keyword">int</span> (*uevent)(<span class="keyword">struct</span> device *dev, <span class="keyword">struct</span> kobj_uevent_env *env);</span><br><span class="line">    <span class="keyword">int</span> (*probe)(<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="keyword">int</span> (*remove)(<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="keyword">void</span> (*shutdown)(<span class="keyword">struct</span> device *dev);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> (*online)(<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="keyword">int</span> (*offline)(<span class="keyword">struct</span> device *dev);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> (*suspend)(<span class="keyword">struct</span> device *dev, <span class="keyword">pm_message_t</span> state);</span><br><span class="line">    <span class="keyword">int</span> (*resume)(<span class="keyword">struct</span> device *dev);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> dev_pm_ops *pm;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> iommu_ops *iommu_ops;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> subsys_private *p;</span><br><span class="line">    <span class="keyword">struct</span> lock_class_key lock_key;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>主要的成员介绍如下</p>
+<ul>
+<li>dev_root</li>
+<li>dev_attrs</li>
+<li>bus_groups, dev_groups, drv_groups</li>
+<li>match</li>
+<li>subsys_private</li>
+</ul>
+<h3 id="dev-root"><a href="#dev-root" class="headerlink" title="dev_root"></a>dev_root</h3><p>默认parent device?</p>
+<h3 id="dev-attrs"><a href="#dev-attrs" class="headerlink" title="dev_attrs"></a>dev_attrs</h3><p>默认挂载在bus下设备的属性？</p>
+<h3 id="bus-groups-dev-groups-drv-groups"><a href="#bus-groups-dev-groups-drv-groups" class="headerlink" title="bus_groups, dev_groups, drv_groups"></a>bus_groups, dev_groups, drv_groups</h3><h3 id="match"><a href="#match" class="headerlink" title="match"></a>match</h3><p>对试图挂载到该总线上的device和driver执行的匹配操作。</p>
+<p>什么时候回调用？</p>
+<h3 id="subsys-private"><a href="#subsys-private" class="headerlink" title="subsys_private"></a>subsys_private</h3><p>适用于bus和class.<br>该结构用来管理bus, driver, device之间的关系。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> subsys_private &#123;</span><br><span class="line">	<span class="keyword">struct</span> kset subsys;</span><br><span class="line">    <span class="keyword">struct</span> kset *devices_kset;</span><br><span class="line">    <span class="keyword">struct</span> list_head interfaces;</span><br><span class="line">    <span class="keyword">struct</span> mutex mutex;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> kset *drivers_kset;</span><br><span class="line">    <span class="keyword">struct</span> klist klist_devices;</span><br><span class="line">    <span class="keyword">struct</span> klist klist_drivers;</span><br><span class="line">    <span class="keyword">struct</span> blocking_notifier_head bus_notifier;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> drivers_autoprobe:<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">struct</span> bus_type *bus;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> kset glue_dirs;</span><br><span class="line">    <span class="keyword">struct</span> <span class="keyword">class</span> *<span class="keyword">class</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>kset subsys: 意义是什么？作为一个bus的抽象，其kset是bus_kset。如subsys-&gt;name = bus1, 那么将会创建/sys/bus/bus1</li>
+<li>devices_kset: 总线上所有devices的集合</li>
+<li>drivers_kset: 总线上所有drivers的集合</li>
+<li>klist_devices和klist_drivers是devices和drivers的链表<blockquote>
+<p>什么地方会用到？</p>
+</blockquote>
+</li>
+<li>drivers_autoprobe：当注册设备或驱动的时候，是否进行绑定操作<blockquote>
+<p>什么地方会用到？</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="bus的函数"><a href="#bus的函数" class="headerlink" title="bus的函数"></a>bus的函数</h2><ul>
+<li>buses_init</li>
+<li>bus_register</li>
+</ul>
+<h3 id="bus的起源buses-init"><a href="#bus的起源buses-init" class="headerlink" title="bus的起源buses_init"></a>bus的起源buses_init</h3><p>在系列第一篇中，提到了driver_init函数，其中调用了buses_init. 这个函数是系统中所有bus的起源。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">bus_kset = kset_create_and_add(<span class="string">"bus"</span>, &amp;bus_uevent_ops, <span class="literal">NULL</span>);</span><br><span class="line">system_kset = kset_create_and_add(<span class="string">"system"</span>, <span class="literal">NULL</span>, &amp;devices_kset-&gt;kobj);</span><br></pre></td></tr></table></figure></p>
+<p>bus_kset是所有bus的源头，将会建立/sys/bus，热插拔操作函数为bus_uevent_ops，当bus有状态变化时，将会通知用户空间uevent消息。<br>devices_kset是在devices_init中建立的，system_kset的parent是devices_kset，所以将会创建/sys/devices/system。</p>
+<blockquote>
+<p>这个文件夹的作用是什么?</p>
+</blockquote>
+<p>bus_uevent_ops中只有一个filter函数，将会对需要提交的消息进行过滤，过滤条件参考代码：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">bus_uevent_filter</span><span class="params">(<span class="keyword">struct</span> kset *kset, <span class="keyword">struct</span> kobject *kobj)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> kobj_type *ktype = get_ktype(kobj);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ktype == &amp;bus_ktype)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>表示如果要求发送uevent消息的Kobj的kobj_type类型不是bus_type，那么将不会发送到用户空间。<br>那么为什么要这么规定呢？bus_type中是什么？</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">struct</span> kobj_type bus_ktype = &#123;</span><br><span class="line">	.sysfs_ops  = &amp;bus_sysfs_ops,</span><br><span class="line">	.release    = bus_release,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="bus-register"><a href="#bus-register" class="headerlink" title="bus_register"></a>bus_register</h3><ul>
+<li>初始化priv结构体，建立关系网<ul>
+<li>设置subsys.kobj.kset = bus_kset</li>
+<li>设置subsys.kobj.ktype = &amp;bus_ktype</li>
+<li>设置drivers_autoprobe = 1</li>
+<li>kset_register(priv-&gt;subsys)</li>
+</ul>
+</li>
+<li>创建uevent属性文件，作用是输入对应的kobject_action type，可以用来模拟事件</li>
+<li>创建devices kset, 同时/sys/bus/bus_name/devices and /sys/bus/bus_name/drivers</li>
+<li>初始化drivers and devices链表</li>
+<li>add_probe_files，创建probe和autoprobe属性文件，probe文件用来输入device名字进行手动配对，autoprobe用来设置autoprobe变量</li>
+<li>bus_add_groups</li>
+</ul>
+<p>以上，sysfs下的总线基本框架结构就全都有了。</p>
+<blockquote>
+<p>attribute和show, store的关系<br>比如bus_attribute结构体<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> bus_attribute &#123;</span><br><span class="line">	<span class="keyword">struct</span> attribute attr;</span><br><span class="line">	<span class="keyword">ssize_t</span> (*show)(<span class="keyword">struct</span> bus_type *bus, <span class="keyword">char</span> *buf);</span><br><span class="line">	<span class="keyword">ssize_t</span> (*store)(<span class="keyword">struct</span> bus_type *bus, <span class="keyword">const</span> <span class="keyword">char</span> *buf, <span class="keyword">size_t</span> count);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> attribute &#123;</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">char</span> *name;</span><br><span class="line">	<span class="keyword">umode_t</span> mode;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>属性是通过sysfs_create_file创建，但是其参数只有attribute，而没有show和store。那么文件是如何和操作函数联系起来的呢？</p>
+<p>在3.0以前的版本中，sysfs_open_file函数会根据file找到对应sysfs_dirent, 再根据sysfs_dirent找到kobj, 将kobj-&gt;ktype-&gt;sysfs_ops赋值给打开的属性文件。<br>这时候，对文件的write和open实质上是sysfs_ops中的store和show。sysfs_ops决定于kobj_type。</p>
+<p>在3.0之后的版本中，由于kernfs从sysfs中分离出来，暂时还不知道具体的过程。</p>
+<h1 id="device和driver的绑定"><a href="#device和driver的绑定" class="headerlink" title="device和driver的绑定"></a>device和driver的绑定</h1><p>每个device应该有对应的driver，将device和driver联系起来的过程叫做绑定。在Linux设备驱动模型中，通过总线实现绑定(所有的device和driver都挂载在bus下)。那么绑定的过程是如何发生的呢？</p>
+<p>既然绑定是双方共同的行为，那么双方都有触发绑定的权利。在device端，device_reigster向bus注册设备时会触发绑定。在driver端，driver_register向bus注册驱动时会触发绑定。具体的绑定代码分析，留到后面的deivce和driver章节。</p>
+<h1 id="device"><a href="#device" class="headerlink" title="device"></a>device</h1><p>在Linux系统中，所有的对象都被抽象为kobject.<br>在Linux系统中，所有的硬件设备被抽象为device。其结构如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> device &#123;</span><br><span class="line">    <span class="keyword">struct</span> device       *parent;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> device_private   *p;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> kobject kobj;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>      *init_name; <span class="comment">/* initial name of the device */</span></span><br><span class="line">    <span class="keyword">struct</span> device_type  *type;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> mutex        mutex;  <span class="comment">/* mutex to synchronize calls to</span><br><span class="line">                     * its driver.</span><br><span class="line">                     */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> bus_type *bus;       <span class="comment">/* type of bus device is on */</span></span><br><span class="line">    <span class="keyword">struct</span> device_driver *driver;   <span class="comment">/* which driver has allocated this</span><br><span class="line">                       device */</span></span><br><span class="line">    <span class="keyword">void</span>        *platform_data; <span class="comment">/* Platform specific data, device</span><br><span class="line">                       core doesn't touch it */</span></span><br><span class="line">    <span class="keyword">struct</span> dev_pm_info  power;</span><br><span class="line">    <span class="keyword">struct</span> dev_power_domain *pwr_domain;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_NUMA</span></span><br><span class="line">    <span class="keyword">int</span>     numa_node;  <span class="comment">/* NUMA node this device is close to */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">    u64     *dma_mask;  <span class="comment">/* dma mask (if dma'able device) */</span></span><br><span class="line">    u64     coherent_dma_mask;<span class="comment">/* Like dma_mask, but for</span><br><span class="line">                         alloc_coherent mappings as</span><br><span class="line">                         not all hardware supports</span><br><span class="line">                         64 bit addresses for consistent</span><br><span class="line">                         allocations such descriptors. */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> device_dma_parameters *dma_parms;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> list_head    dma_pools;  <span class="comment">/* dma pools (if dma'ble) */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> dma_coherent_mem *dma_mem; <span class="comment">/* internal for coherent mem</span><br><span class="line">                         override */</span></span><br><span class="line">    <span class="comment">/* arch specific additions */</span></span><br><span class="line">    <span class="keyword">struct</span> dev_archdata archdata;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> device_node  *of_node; <span class="comment">/* associated device tree node */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">dev_t</span>           devt;   <span class="comment">/* dev_t, creates the sysfs "dev" */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">spinlock_t</span>      devres_lock;</span><br><span class="line">    <span class="keyword">struct</span> list_head    devres_head;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> klist_node   knode_class;</span><br><span class="line">    <span class="keyword">struct</span> <span class="keyword">class</span>        *<span class="keyword">class</span>;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> attribute_group **groups;  <span class="comment">/* optional groups */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span>    (*release)(<span class="keyword">struct</span> device *dev);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>其中以下成员需要关注</p>
+<ul>
+<li>struct device *parent<blockquote>
+<p>当前device的父设备，作用是什么？层次关系在kobject中不是已经表明了么？</p>
+</blockquote>
+</li>
+<li>struct device_private *p</li>
+<li>struct kobject kobj</li>
+<li>struct device_type *type</li>
+<li>struct bus_type *bus</li>
+<li>struct device_driver *driver<blockquote>
+<p>device对应的driver，没绑定时为NULL</p>
+</blockquote>
+</li>
+<li>device_node *of_node</li>
+<li>struct class *class</li>
+<li>struct attribute_grout **groups</li>
+</ul>
+<h2 id="device的相关函数"><a href="#device的相关函数" class="headerlink" title="device的相关函数"></a>device的相关函数</h2><ul>
+<li>devices_init: device系统的初始化</li>
+<li>device_initialize</li>
+<li>device_register</li>
+<li>device_add</li>
+</ul>
+<h3 id="device-init"><a href="#device-init" class="headerlink" title="device_init"></a>device_init</h3><p>在driver_init中被调用。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> __<span class="function">init <span class="title">devices_init</span><span class="params">(<span class="keyword">void</span>)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    devices_kset = kset_create_and_add(<span class="string">"devices"</span>, &amp;device_uevent_ops, <span class="literal">NULL</span>);</span><br><span class="line">    dev_kobj = kobject_create_and_add(<span class="string">"dev"</span>, <span class="literal">NULL</span>);</span><br><span class="line">    sysfs_dev_block_kobj = kobject_create_and_add(<span class="string">"block"</span>, dev_kobj);</span><br><span class="line">    sysfs_dev_char_kobj = kobject_create_and_add(<span class="string">"char"</span>, dev_kobj);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在/sys下创建devices, dev, 在/sys/dev下面创建block和char文件夹。</p>
+<p>问题：为什么dev, block, char没有用kset？</p>
+<h3 id="device-initialize"><a href="#device-initialize" class="headerlink" title="device_initialize"></a>device_initialize</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">device_initialize</span><span class="params">(<span class="keyword">struct</span> device *dev)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    dev-&gt;kobj.kset = devices_kset;</span><br><span class="line">    kobject_init(&amp;dev-&gt;kobj, &amp;device_ktype);</span><br><span class="line">    INIT_LIST_HEAD(&amp;dev-&gt;dma_pools);</span><br><span class="line">    mutex_init(&amp;dev-&gt;mutex);</span><br><span class="line">    lockdep_set_novalidate_class(&amp;dev-&gt;mutex);</span><br><span class="line">    spin_lock_init(&amp;dev-&gt;devres_lock);</span><br><span class="line">    INIT_LIST_HEAD(&amp;dev-&gt;devres_head);</span><br><span class="line">    device_pm_init(dev);</span><br><span class="line">    set_dev_node(dev, <span class="number">-1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>需要注意的是device-&gt;kobj的kset是devices_kset，那么该kobj对应的目录将会建立在/sys/devices下面</p>
+<h3 id="device-register"><a href="#device-register" class="headerlink" title="device_register"></a>device_register</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">device_register</span><span class="params">(<span class="keyword">struct</span> device *dev)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	device_initialize(dev);</span><br><span class="line">	<span class="keyword">return</span> device_add(dev);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>重点是device_add.</p>
+<h3 id="device-add"><a href="#device-add" class="headerlink" title="device_add"></a>device_add</h3><p>位于drivers/base/core.c中，API为<br>int device_add(struct device *dev)</p>
+<p>device_add做了什么？</p>
+<blockquote>
+<p>坑，devtmpfs，动态生成设备节点</p>
+</blockquote>
+<h4 id="建立系统硬件拓扑关系图"><a href="#建立系统硬件拓扑关系图" class="headerlink" title="建立系统硬件拓扑关系图"></a>建立系统硬件拓扑关系图</h4><h4 id="为dev建立属性文件"><a href="#为dev建立属性文件" class="headerlink" title="为dev建立属性文件"></a>为dev建立属性文件</h4><h4 id="bus-probe-device"><a href="#bus-probe-device" class="headerlink" title="bus_probe_device"></a>bus_probe_device</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">bus_probe_device</span><span class="params">(<span class="keyword">struct</span> device *dev)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> (bus-&gt;p-&gt;drivers_autoprobe) &#123;</span><br><span class="line">		ret = device_attach(dev);</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在autoprobe为1的情况下，执行device_attach.<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">__device_attach</span><br><span class="line">	__device_match_device	<span class="comment">//根据drv-&gt;bus-&gt;match判断是否匹配</span></span><br><span class="line">	driver_probe_device</span><br><span class="line">		really_probe <span class="comment">//如果有dev-&gt;bus-&gt;probe</span></span><br><span class="line">			dev-&gt;bus-&gt;probe</span><br><span class="line">			<span class="comment">//如果有drv-&gt;probe</span></span><br><span class="line">			drv-&gt;probe</span><br></pre></td></tr></table></figure></p>
+<h1 id="driver"><a href="#driver" class="headerlink" title="driver"></a>driver</h1><h2 id="driver数据结构"><a href="#driver数据结构" class="headerlink" title="driver数据结构"></a>driver数据结构</h2><p>driver在内核中的数据结构如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> device_driver &#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>      *name;</span><br><span class="line">    <span class="keyword">struct</span> bus_type     *bus;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> module       *owner;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>      *mod_name;  <span class="comment">/* used for built-in modules */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">bool</span> suppress_bind_attrs;   <span class="comment">/* disables bind/unbind via sysfs */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> of_device_id   *of_match_table;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> acpi_device_id *acpi_match_table;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> (*probe) (<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="keyword">int</span> (*remove) (<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="keyword">void</span> (*shutdown) (<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="keyword">int</span> (*suspend) (<span class="keyword">struct</span> device *dev, <span class="keyword">pm_message_t</span> state);</span><br><span class="line">    <span class="keyword">int</span> (*resume) (<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> attribute_group **groups;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> dev_pm_ops *pm;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> driver_private *p;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>分析其中的四个成员</p>
+<ul>
+<li>struct module *owner<br>驱动所在的内核模块，该部分在哪里会用到？作用是什么</li>
+<li>const struct of_device_id *of_match_table</li>
+<li>probe<br>驱动程序的探测函数，当bus中将驱动和对应的设备绑定时(bus_probe_device)，内核会首先调用bus中的probe函数，如果bus没有实现自己的probe函数，内核会调用驱动程序的probe函数。</li>
+<li>struct driver_private *p</li>
+</ul>
+<h2 id="driver的函数"><a href="#driver的函数" class="headerlink" title="driver的函数"></a>driver的函数</h2><p>通过driver_reigster向系统注册驱动，其核心代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;driver/base/driver.c&gt;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">driver_register</span><span class="params">(<span class="keyword">struct</span> device_driver *drv)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	other = driver_find(drv-&gt;name, drv-&gt;bus);</span><br><span class="line">	ret = bus_add_driver(drv);</span><br><span class="line">	ret = driver_add_groups(drv, drv-&gt;groups);</span><br><span class="line">	object_uevent(&amp;drv-&gt;p-&gt;kobj, KOBJ_ADD);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>driver_find用来确认driver是否在系统中注册过，通过Bus指名查找的总线，如果成功返回指针，否则返回0.<br>如果驱动没有被注册，那么通过bus_add_driver(drv)向系统注册。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">bus_add_driver</span><span class="params">(<span class="keyword">struct</span> device_driver *drv)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> bus_type *bus;</span><br><span class="line">    <span class="keyword">struct</span> driver_private *priv;</span><br><span class="line">    <span class="keyword">int</span> error = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    bus = bus_get(drv-&gt;bus);</span><br><span class="line">    <span class="keyword">if</span> (!bus)</span><br><span class="line">        <span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">    priv = kzalloc(<span class="keyword">sizeof</span>(*priv), GFP_KERNEL);</span><br><span class="line">	<span class="comment">//driver对应的devices?</span></span><br><span class="line">    klist_init(&amp;priv-&gt;klist_devices, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">    priv-&gt;driver = drv;</span><br><span class="line">    drv-&gt;p = priv;</span><br><span class="line">	<span class="comment">//driver kobj对应的kset是bus的drivers_kset</span></span><br><span class="line">    priv-&gt;kobj.kset = bus-&gt;p-&gt;drivers_kset;</span><br><span class="line">	<span class="comment">//建立的sys目录在/sys/bus/bus_name/drivers/drv-&gt;name</span></span><br><span class="line">    error = kobject_init_and_add(&amp;priv-&gt;kobj, &amp;driver_ktype, <span class="literal">NULL</span>,</span><br><span class="line">                     <span class="string">"%s"</span>, drv-&gt;name);</span><br><span class="line"></span><br><span class="line">	<span class="comment">//将device_driver-&gt;driver_private-&gt;knode_bus作为节点加入bus-&gt;p-&gt;klist_drivers中</span></span><br><span class="line">    klist_add_tail(&amp;priv-&gt;knode_bus, &amp;bus-&gt;p-&gt;klist_drivers);</span><br><span class="line">	<span class="comment">//如果drivers_autoprobe置1，则通过driver_attach将driver和device绑定</span></span><br><span class="line">    <span class="keyword">if</span> (drv-&gt;bus-&gt;p-&gt;drivers_autoprobe) &#123;</span><br><span class="line">        error = driver_attach(drv);</span><br><span class="line">        <span class="keyword">if</span> (error)</span><br><span class="line">            <span class="keyword">goto</span> out_unregister;</span><br><span class="line">    &#125;</span><br><span class="line">    module_add_driver(drv-&gt;owner, drv);</span><br><span class="line"></span><br><span class="line">    error = driver_create_file(drv, &amp;driver_attr_uevent);</span><br><span class="line">    error = driver_add_groups(drv, bus-&gt;drv_groups);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>driver_attach函数用来匹配device和driver<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">int driver_attach(struct device_driver *drv)</span><br><span class="line">&#123;</span><br><span class="line">    return bus_for_each_dev(drv-&gt;bus, NULL, drv, __driver_attach);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int bus_for_each_dev(struct bus_type *bus, struct device *start,</span><br><span class="line">             void *data, int (*fn)(struct device *, void *))</span><br><span class="line">&#123;</span><br><span class="line">    struct klist_iter i;</span><br><span class="line">    struct device *dev;</span><br><span class="line">    int error = 0;</span><br><span class="line"></span><br><span class="line">    klist_iter_init_node(&amp;bus-&gt;p-&gt;klist_devices, &amp;i,</span><br><span class="line">                 (start ? &amp;start-&gt;p-&gt;knode_bus : NULL));</span><br><span class="line">    while ((dev = next_device(&amp;i)) &amp;&amp; !error)</span><br><span class="line">        error = fn(dev, data);</span><br><span class="line">    klist_iter_exit(&amp;i);</span><br><span class="line">    return error;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">static int __driver_attach(struct device *dev, void *data)</span><br><span class="line">&#123;</span><br><span class="line">    struct device_driver *drv = data;</span><br><span class="line"></span><br><span class="line">    if (!driver_match_device(drv, dev))</span><br><span class="line">        return 0;</span><br><span class="line"></span><br><span class="line">    if (dev-&gt;parent)    /* Needed for USB */</span><br><span class="line">        device_lock(dev-&gt;parent);</span><br><span class="line">    device_lock(dev);</span><br><span class="line">	//实际的绑定函数</span><br><span class="line">    if (!dev-&gt;driver)</span><br><span class="line">        driver_probe_device(drv, dev);</span><br><span class="line">    device_unlock(dev);</span><br><span class="line">    if (dev-&gt;parent)</span><br><span class="line">        device_unlock(dev-&gt;parent);</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在device_add函数中，会通过bus_probe_device调用device_attach函数，而在driver_register中，经过层层调用最后会调用到driver_attach函数。这两个函数最后都会调用really_probe函数。</p>
+<p>而在really_probe函数中，如果bus有probe函数，会调用dev-&gt;bus-&gt;probe。如果bus没有probe，会调用driver的probe函数。</p>
+<h1 id="class"><a href="#class" class="headerlink" title="class"></a>class</h1><p>class不同于bus/device/driver，是完全抽象出来的概念。常见的有block, tty, input等。</p>
+<h2 id="class-example"><a href="#class-example" class="headerlink" title="class example"></a>class example</h2><p>class_simple example from ldd3</p>
+<p>以input子系统为例。</p>
+<h2 id="class的起源"><a href="#class的起源" class="headerlink" title="class的起源"></a>class的起源</h2><p>通过classes_init创建了/sys/class目录(kset_create_and_add)，对应的内核对象为class_kset，所谓系统中所有class内核对象的顶层kset.</p>
+<h2 id="class-1"><a href="#class-1" class="headerlink" title="class"></a>class</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="keyword">class</span> &#123;</span><br><span class="line">      <span class="keyword">const</span> <span class="keyword">char</span>      *name;</span><br><span class="line">      <span class="keyword">struct</span> module       *owner;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">struct</span> class_attribute      *class_attrs;</span><br><span class="line">      <span class="keyword">const</span> <span class="keyword">struct</span> attribute_group    **dev_groups;</span><br><span class="line">      <span class="keyword">struct</span> kobject          *dev_kobj;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">int</span> (*dev_uevent)(<span class="keyword">struct</span> device *dev, <span class="keyword">struct</span> kobj_uevent_env *env);</span><br><span class="line">      <span class="keyword">char</span> *(*devnode)(<span class="keyword">struct</span> device *dev, <span class="keyword">umode_t</span> *mode);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">void</span> (*class_release)(<span class="keyword">struct</span> <span class="keyword">class</span> *<span class="keyword">class</span>);</span><br><span class="line">      <span class="keyword">void</span> (*dev_release)(<span class="keyword">struct</span> device *dev);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">int</span> (*suspend)(<span class="keyword">struct</span> device *dev, <span class="keyword">pm_message_t</span> state);</span><br><span class="line">      <span class="keyword">int</span> (*resume)(<span class="keyword">struct</span> device *dev);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">const</span> <span class="keyword">struct</span> kobj_ns_type_operations *ns_type;</span><br><span class="line">      <span class="keyword">const</span> <span class="keyword">void</span> *(*<span class="keyword">namespace</span>)(<span class="keyword">struct</span> device *dev);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">const</span> <span class="keyword">struct</span> dev_pm_ops *pm;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">struct</span> subsys_private *p;</span><br><span class="line">  &#125;;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>owner</li>
+<li>class_attrs</li>
+<li>dev_groups</li>
+<li>subsys_private *p</li>
+</ul>
+<h2 id="class和系统的关系"><a href="#class和系统的关系" class="headerlink" title="class和系统的关系"></a>class和系统的关系</h2><p>和class以及系统相关的函数主要是以下几个</p>
+<ul>
+<li>class注册<ul>
+<li>class_create</li>
+<li>class_register</li>
+</ul>
+</li>
+<li>device_create</li>
+</ul>
+<h3 id="class-create-amp-amp-class-register"><a href="#class-create-amp-amp-class-register" class="headerlink" title="class_create &amp;&amp; class_register"></a>class_create &amp;&amp; class_register</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">class_register(<span class="keyword">class</span>)</span><br><span class="line">    __class_register(<span class="keyword">class</span>, &amp;__key)</span><br><span class="line"></span><br><span class="line">class_create(owner, name)</span><br><span class="line">    __class_create(owner, name, &amp;__key)</span><br><span class="line">        <span class="keyword">class</span>-&gt;name = name;</span><br><span class="line">        <span class="keyword">class</span>-&gt;owner = owner;</span><br><span class="line">        <span class="keyword">class</span>-&gt;release = class_release;</span><br><span class="line"></span><br><span class="line">        __class_register(<span class="keyword">class</span>, &amp;__key)</span><br></pre></td></tr></table></figure>
+<p>这两个函数都调用了__class_register<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> __class_register(<span class="keyword">struct</span> <span class="keyword">class</span> *cls, <span class="keyword">struct</span> lock_class_key *key)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">struct</span> subsys_private *cp;</span><br><span class="line"></span><br><span class="line">    cp = kzalloc(<span class="keyword">sizeof</span>(*cp), GFP_KERNEL);</span><br><span class="line">    klist_init(&amp;cp-&gt;klist_devices, klist_class_dev_get, klist_class_dev_put);</span><br><span class="line">    INIT_LIST_HEAD(&amp;cp-&gt;interfaces);</span><br><span class="line">    kset_init(&amp;cp-&gt;glue_dirs);</span><br><span class="line">    __mutex_init(&amp;cp-&gt;mutex, <span class="string">"subsys mutex"</span>, key);</span><br><span class="line">    error = kobject_set_name(&amp;cp-&gt;subsys.kobj, <span class="string">"%s"</span>, cls-&gt;name);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* set the default /sys/dev directory for devices of this class */</span></span><br><span class="line">    <span class="keyword">if</span> (!cls-&gt;dev_kobj)</span><br><span class="line">        cls-&gt;dev_kobj = sysfs_dev_char_kobj;</span><br><span class="line"></span><br><span class="line">    cp-&gt;subsys.kobj.kset = class_kset;</span><br><span class="line">    cp-&gt;subsys.kobj.ktype = &amp;class_ktype;</span><br><span class="line">    cp-&gt;<span class="keyword">class</span> = cls;</span><br><span class="line">    cls-&gt;p = cp;</span><br><span class="line"></span><br><span class="line">    error = kset_register(&amp;cp-&gt;subsys);</span><br><span class="line">    error = add_class_attrs(class_get(cls));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>目录对应的kobj_type就是class_ktype，也就决定了对该目录的操作最后会调用到class_ktype中的sysfs_ops.<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> ssize_t <span class="title">class_attr_show</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> attribute *attr,</span><br><span class="line">                   <span class="keyword">char</span> *buf)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> class_attribute *class_attr = to_class_attr(attr);</span><br><span class="line">    <span class="keyword">struct</span> subsys_private *cp = to_subsys_private(kobj);</span><br><span class="line">    <span class="keyword">ssize_t</span> ret = -EIO;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (class_attr-&gt;show)</span><br><span class="line">        ret = class_attr-&gt;show(cp-&gt;<span class="keyword">class</span>, class_attr, buf);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> ssize_t <span class="title">class_attr_store</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> attribute *attr,</span><br><span class="line">                <span class="keyword">const</span> <span class="keyword">char</span> *buf, <span class="keyword">size_t</span> count)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> class_attribute *class_attr = to_class_attr(attr);</span><br><span class="line">    <span class="keyword">struct</span> subsys_private *cp = to_subsys_private(kobj);</span><br><span class="line">    <span class="keyword">ssize_t</span> ret = -EIO;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (class_attr-&gt;store)</span><br><span class="line">        ret = class_attr-&gt;store(cp-&gt;<span class="keyword">class</span>, class_attr, buf, count);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">struct</span> sysfs_ops class_sysfs_ops = &#123;</span><br><span class="line">    .show      = class_attr_show,</span><br><span class="line">    .store     = class_attr_store,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">struct</span> kobj_type class_ktype = &#123;</span><br><span class="line">    .sysfs_ops  = &amp;class_sysfs_ops,</span><br><span class="line">    .release    = class_release,</span><br><span class="line">    .child_ns_type  = class_child_ns_type,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>在class对应的sysfs_ops中，show最后会调用class_attribute-&gt;show, store会调用class_attribute-&gt;store.<br>cp-&gt;subsys通过kset_register加入到系统中，因为subsys.kobj.kset = class_kset，所以对应的目录是/sys/class/cls-&gt;name.<br>最后通过add_class_attrs添加目录下的属性文件，其属性文件通过class-&gt;class_attrs指定。</p>
+<p>以上是创建class的过程。</p>
+<h2 id="如何创建一个class"><a href="#如何创建一个class" class="headerlink" title="如何创建一个class?"></a>如何创建一个class?</h2><h1 id="属性文件"><a href="#属性文件" class="headerlink" title="属性文件"></a>属性文件</h1><p>属性文件框架的核心是attribute以及sysfs_create_file.</p>
+<p>attribute作为嵌入式的结构被嵌入各式各样的xxx_attribute结构体中，xxx_attribute中包含了对应的xxx_show和xxx_store函数。<br>sysfs_create_file(kobj, attr)会根据kobj确认path，根据attr建立文件。<br>那么属性文件对应的操作如何确定？<br>这就需要kobj_type的帮助，在kobj_type-&gt;sysfs_ops中的show和store函数中，会通过attr找到被嵌入的xxx_attribute结构体，然后调用相应的show和store函数。</p>
+<h2 id="bus-attribute"><a href="#bus-attribute" class="headerlink" title="bus_attribute"></a>bus_attribute</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> attribute &#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>      *name;</span><br><span class="line">    <span class="keyword">umode_t</span>         mode;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> bus_attribute &#123;</span><br><span class="line">    <span class="keyword">struct</span> attribute    attr;</span><br><span class="line">    <span class="keyword">ssize_t</span> (*show)(<span class="keyword">struct</span> bus_type *bus, <span class="keyword">char</span> *buf);</span><br><span class="line">    <span class="keyword">ssize_t</span> (*store)(<span class="keyword">struct</span> bus_type *bus, <span class="keyword">const</span> <span class="keyword">char</span> *buf, <span class="keyword">size_t</span> count);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>该结构体通过BUS_ATTR(_name, _mode, _show, _store)构建，会初始化结构为bus_attribute的bus_attr_name的变量。<br>并通过bus_create_file建立属性文件。对于bus来说，属性文件的目录层级通过bus_type决定。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">bus_create_file</span><span class="params">(<span class="keyword">struct</span> bus_type *bus, <span class="keyword">struct</span> bus_attribute *attr)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> error;</span><br><span class="line">    <span class="keyword">if</span> (bus_get(bus)) &#123;</span><br><span class="line">        error = sysfs_create_file(&amp;bus-&gt;p-&gt;subsys.kobj, &amp;attr-&gt;attr);</span><br><span class="line">        bus_put(bus);</span><br><span class="line">    &#125; <span class="keyword">else</span></span><br><span class="line">        error = -EINVAL;</span><br><span class="line">    <span class="keyword">return</span> error;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其文件对应的操作方式由bus_ktype中的bus_sysfs_ops决定：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> ssize_t <span class="title">bus_attr_show</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> attribute *attr,</span><br><span class="line">                 <span class="keyword">char</span> *buf)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> bus_attribute *bus_attr = to_bus_attr(attr);</span><br><span class="line">    <span class="keyword">struct</span> subsys_private *subsys_priv = to_subsys_private(kobj);</span><br><span class="line">    <span class="keyword">ssize_t</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (bus_attr-&gt;show)</span><br><span class="line">        ret = bus_attr-&gt;show(subsys_priv-&gt;bus, buf);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> ssize_t <span class="title">bus_attr_store</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> attribute *attr,</span><br><span class="line">                  <span class="keyword">const</span> <span class="keyword">char</span> *buf, <span class="keyword">size_t</span> count)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> bus_attribute *bus_attr = to_bus_attr(attr);</span><br><span class="line">    <span class="keyword">struct</span> subsys_private *subsys_priv = to_subsys_private(kobj);</span><br><span class="line">    <span class="keyword">ssize_t</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (bus_attr-&gt;store)</span><br><span class="line">        ret = bus_attr-&gt;store(subsys_priv-&gt;bus, buf, count);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">struct</span> sysfs_ops bus_sysfs_ops = &#123;</span><br><span class="line">    .show   = bus_attr_show,</span><br><span class="line">    .store  = bus_attr_store,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">struct</span> kobj_type bus_ktype = &#123;</span><br><span class="line">    .sysfs_ops  = &amp;bus_sysfs_ops,</span><br><span class="line">    .release    = bus_release,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h2 id="device-attribute"><a href="#device-attribute" class="headerlink" title="device_attribute"></a>device_attribute</h2><h2 id="driver-attribute"><a href="#driver-attribute" class="headerlink" title="driver_attribute"></a>driver_attribute</h2><p>以上两部分和bus_attribute相似，就略过了。</p>
+<h2 id="attribute-group"><a href="#attribute-group" class="headerlink" title="attribute_group"></a>attribute_group</h2><p>attribute_group的作用就是将多个attr放在一个group中，方便管理。</p>
+<p>以i2c为例<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;driver/i2c/i2c-core.c&gt;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">struct</span> attribute *i2c_dev_attrs[] = &#123;</span><br><span class="line">    &amp;dev_attr_name.attr,</span><br><span class="line">    <span class="comment">/* modalias helps coldplug:  modprobe $(cat .../modalias) */</span></span><br><span class="line">    &amp;dev_attr_modalias.attr,</span><br><span class="line">    <span class="literal">NULL</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">//生成i2c_dev_groups</span></span><br><span class="line">ATTRIBUTE_GROUPS(i2c_dev);</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">struct</span> device_type i2c_client_type = &#123;</span><br><span class="line">    .groups     = i2c_dev_groups,</span><br><span class="line">    .uevent     = i2c_device_uevent,</span><br><span class="line">    .release    = i2c_client_dev_release,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>其中ATTRIBUTE_GROUPS在include/linux/sysfs.h中定义<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ATTRIBUTE_GROUPS(_name)                 \</span><br><span class="line">static const struct attribute_group _name##_group = &#123;       \</span><br><span class="line">    .attrs = _name##_attrs,                 \</span><br><span class="line">&#125;;                              \</span><br><span class="line">__ATTRIBUTE_GROUPS(_name)</span></span><br></pre></td></tr></table></figure></p>
+<p>整个device_type会赋值给device.type，然后device_register会生成属性文件。</p>
+<p>如果group赋值给class-&gt;dev_groups或者device_type-&gt;groups或者dev-&gt;groups, 那么将在bus_add_device中通过device_register-&gt;device_add-&gt;device_add_attrs中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;drivers/base/core.c&gt;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">device_add_attrs</span><span class="params">(<span class="keyword">struct</span> device *dev)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="keyword">class</span> *<span class="keyword">class</span> = dev-&gt;<span class="keyword">class</span>;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">struct</span> device_type *type = dev-&gt;type;</span><br><span class="line">    <span class="keyword">int</span> error;</span><br><span class="line"></span><br><span class="line">    error = device_add_groups(dev, <span class="keyword">class</span>-&gt;dev_groups);</span><br><span class="line"></span><br><span class="line">    error = device_add_groups(dev, type-&gt;groups);</span><br><span class="line"></span><br><span class="line">    error = device_add_groups(dev, dev-&gt;groups);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="默认属性文件"><a href="#默认属性文件" class="headerlink" title="默认属性文件"></a>默认属性文件</h2><ul>
+<li>uevent</li>
+<li>probe</li>
+<li>autoprobe</li>
+</ul>
+<h3 id="uevent属性文件"><a href="#uevent属性文件" class="headerlink" title="uevent属性文件"></a>uevent属性文件</h3><p>该部分的实现在driver/base/core.c中。<br>uevent的读取：会输出uevent env<br>uevent的写入：会根据写入的action，引起kobject_uevent的操作</p>
+<h3 id="probe-和-autoprobe"><a href="#probe-和-autoprobe" class="headerlink" title="probe 和 autoprobe"></a>probe 和 autoprobe</h3><p>该部分你的实现在driver/base/bus.c中。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="title">BUS_ATTR</span><span class="params">(drivers_probe, S_IWUSR, <span class="literal">NULL</span>, store_drivers_probe)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="title">BUS_ATTR</span><span class="params">(drivers_autoprobe, S_IWUSR | S_IRUGO,</span><br><span class="line">        show_drivers_autoprobe, store_drivers_autoprobe)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>autoprobe文件用来改变autoprobe变量的值。<br>probe文件是只写，用来手动启动一次probe.</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-3-kset篇/" rel="next" title="Linux设备驱动模型系列 - 3 kset篇">
+                <i class="fa fa-chevron-left"></i> Linux设备驱动模型系列 - 3 kset篇
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-5-sysfs篇/" rel="prev" title="Linux设备驱动模型系列 - 5 sysfs篇">
+                Linux设备驱动模型系列 - 5 sysfs篇 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-4-bus-device-driver篇/"
+           data-title="Linux设备驱动模型系列 - 4 bus, device, driver篇" data-url="hoastyle.github.io/2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-4-bus-device-driver篇/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/兔子.JPG"
+               alt="Hao(梁浩)" />
+          <p class="site-author-name" itemprop="name">Hao(梁浩)</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">16</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#bus"><span class="nav-number">1.</span> <span class="nav-text">bus</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#bus的抽象结构"><span class="nav-number">1.1.</span> <span class="nav-text">bus的抽象结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#dev-root"><span class="nav-number">1.1.1.</span> <span class="nav-text">dev_root</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dev-attrs"><span class="nav-number">1.1.2.</span> <span class="nav-text">dev_attrs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bus-groups-dev-groups-drv-groups"><span class="nav-number">1.1.3.</span> <span class="nav-text">bus_groups, dev_groups, drv_groups</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#match"><span class="nav-number">1.1.4.</span> <span class="nav-text">match</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#subsys-private"><span class="nav-number">1.1.5.</span> <span class="nav-text">subsys_private</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bus的函数"><span class="nav-number">1.2.</span> <span class="nav-text">bus的函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bus的起源buses-init"><span class="nav-number">1.2.1.</span> <span class="nav-text">bus的起源buses_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bus-register"><span class="nav-number">1.2.2.</span> <span class="nav-text">bus_register</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#device和driver的绑定"><span class="nav-number">2.</span> <span class="nav-text">device和driver的绑定</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#device"><span class="nav-number">3.</span> <span class="nav-text">device</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#device的相关函数"><span class="nav-number">3.1.</span> <span class="nav-text">device的相关函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#device-init"><span class="nav-number">3.1.1.</span> <span class="nav-text">device_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#device-initialize"><span class="nav-number">3.1.2.</span> <span class="nav-text">device_initialize</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#device-register"><span class="nav-number">3.1.3.</span> <span class="nav-text">device_register</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#device-add"><span class="nav-number">3.1.4.</span> <span class="nav-text">device_add</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#建立系统硬件拓扑关系图"><span class="nav-number">3.1.4.1.</span> <span class="nav-text">建立系统硬件拓扑关系图</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#为dev建立属性文件"><span class="nav-number">3.1.4.2.</span> <span class="nav-text">为dev建立属性文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bus-probe-device"><span class="nav-number">3.1.4.3.</span> <span class="nav-text">bus_probe_device</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#driver"><span class="nav-number">4.</span> <span class="nav-text">driver</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#driver数据结构"><span class="nav-number">4.1.</span> <span class="nav-text">driver数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver的函数"><span class="nav-number">4.2.</span> <span class="nav-text">driver的函数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#class"><span class="nav-number">5.</span> <span class="nav-text">class</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#class-example"><span class="nav-number">5.1.</span> <span class="nav-text">class example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#class的起源"><span class="nav-number">5.2.</span> <span class="nav-text">class的起源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#class-1"><span class="nav-number">5.3.</span> <span class="nav-text">class</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#class和系统的关系"><span class="nav-number">5.4.</span> <span class="nav-text">class和系统的关系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#class-create-amp-amp-class-register"><span class="nav-number">5.4.1.</span> <span class="nav-text">class_create && class_register</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何创建一个class"><span class="nav-number">5.5.</span> <span class="nav-text">如何创建一个class?</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#属性文件"><span class="nav-number">6.</span> <span class="nav-text">属性文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#bus-attribute"><span class="nav-number">6.1.</span> <span class="nav-text">bus_attribute</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#device-attribute"><span class="nav-number">6.2.</span> <span class="nav-text">device_attribute</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-attribute"><span class="nav-number">6.3.</span> <span class="nav-text">driver_attribute</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#attribute-group"><span class="nav-number">6.4.</span> <span class="nav-text">attribute_group</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#默认属性文件"><span class="nav-number">6.5.</span> <span class="nav-text">默认属性文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#uevent属性文件"><span class="nav-number">6.5.1.</span> <span class="nav-text">uevent属性文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#probe-和-autoprobe"><span class="nav-number">6.5.2.</span> <span class="nav-text">probe 和 autoprobe</span></a></li></ol></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao(梁浩)</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<span id="busuanzi_container_site_pv">
+  &nbsp; | &nbsp; 本站总访问量<span id="busuanzi_value_site_pv"></span>次
+</span>
+
+<span id="busuanzi_container_site_uv">
+  &nbsp; | &nbsp; 本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"hoastyle"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>

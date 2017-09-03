@@ -1,0 +1,779 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta name="baidu-site-verification" content="wtiIcSmt3U" />
+<meta name="google-site-verification" content="XD6-y8mgHOkN3DXdrUw4WwjPFkDrTcvkoyo7rLipzrQ" />
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext/css?family=Monda:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="driver,Linux,driver model," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/zero.png?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="本系列主要介绍讨论Linux设备驱动模型，该模型是个非常复杂的系统。从上而下，其主要由总线、设备、驱动构成。从下而上，为了实现这些组件间的相互关系，定义了kobject以及kset两个底层的数据结构。以上两种底层数据结构和sysfs相交互，通过sysfs向用户空间展示了各个组件间的相互联系以及层次结构，并且以文件的形式向用户空间提供了简单访问内核的方法。
+
+为了更容易理解Linux设备驱动模型，整">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux设备驱动模型系列 - 1 系列结构篇">
+<meta property="og:url" content="hoastyle.github.io/2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-1-系列结构篇/index.html">
+<meta property="og:site_name" content="IoE">
+<meta property="og:description" content="本系列主要介绍讨论Linux设备驱动模型，该模型是个非常复杂的系统。从上而下，其主要由总线、设备、驱动构成。从下而上，为了实现这些组件间的相互关系，定义了kobject以及kset两个底层的数据结构。以上两种底层数据结构和sysfs相交互，通过sysfs向用户空间展示了各个组件间的相互联系以及层次结构，并且以文件的形式向用户空间提供了简单访问内核的方法。
+
+为了更容易理解Linux设备驱动模型，整">
+<meta property="og:updated_time" content="2017-03-26T03:13:52.361Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux设备驱动模型系列 - 1 系列结构篇">
+<meta name="twitter:description" content="本系列主要介绍讨论Linux设备驱动模型，该模型是个非常复杂的系统。从上而下，其主要由总线、设备、驱动构成。从下而上，为了实现这些组件间的相互关系，定义了kobject以及kset两个底层的数据结构。以上两种底层数据结构和sysfs相交互，通过sysfs向用户空间展示了各个组件间的相互联系以及层次结构，并且以文件的形式向用户空间提供了简单访问内核的方法。
+
+为了更容易理解Linux设备驱动模型，整">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> Linux设备驱动模型系列 - 1 系列结构篇 | IoE </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">IoE</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Linux设备驱动模型系列 - 1 系列结构篇
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-19T23:22:09+08:00" content="2016-06-19">
+              2016-06-19
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/" itemprop="url" rel="index">
+                    <span itemprop="name">Tech</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/" itemprop="url" rel="index">
+                    <span itemprop="name">OS</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/" itemprop="url" rel="index">
+                    <span itemprop="name">Driver</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/Framework/" itemprop="url" rel="index">
+                    <span itemprop="name">Framework</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Tech/OS/Linux/Driver/Framework/Linux设备驱动模型/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux设备驱动模型</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-1-系列结构篇/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-1-系列结构篇/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+  			  <span id="busuanzi_container_page_pv">  |  阅读量 <span id="busuanzi_value_page_pv"></span> 次</span>
+		  
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote class="blockquote-center"><br>本系列主要介绍讨论Linux设备驱动模型，该模型是个非常复杂的系统。从上而下，其主要由总线、设备、驱动构成。从下而上，为了实现这些组件间的相互关系，定义了kobject以及kset两个底层的数据结构。以上两种底层数据结构和sysfs相交互，通过sysfs向用户空间展示了各个组件间的相互联系以及层次结构，并且以文件的形式向用户空间提供了简单访问内核的方法。<br></blockquote>
+
+<p>为了更容易理解Linux设备驱动模型，整个系列采用由下而上的方式进行分析。<br><a id="more"></a></p>
+<h1 id="底层"><a href="#底层" class="headerlink" title="底层"></a>底层</h1><h2 id="kobject"><a href="#kobject" class="headerlink" title="kobject"></a>kobject</h2><p>最早期是为了计数，其唯一的成员就是kref. 随着设备驱动模型的发展和建立，kobject成为模型中所有对象的基本结构。</p>
+<h2 id="kset"><a href="#kset" class="headerlink" title="kset"></a>kset</h2><p>kset实质上来说是kobject的扩展，和kobject最大的不同就是uevent(热插拔的底层实现).</p>
+<blockquote>
+<p>这里的热插拔可以理解为内核空间发生的时间可以实时的通知用户空间。</p>
+</blockquote>
+<p>层次结构上，其作用和Kobject无区别，只是作为一个普通目录。kset相当于一个kobject容器，该容器内所有的kobject的热插拔都通过kset-&gt;uevent函数实现。单独的kobject(没有对应的kset)，将会失去热插拔的特性。</p>
+<h1 id="中层"><a href="#中层" class="headerlink" title="中层"></a>中层</h1><p>中层部分的核心就是三个组件，分别是bus、device、type. 驱动程序员主要接触的就是该部分。<br>问题：</p>
+<ul>
+<li>1 那么这部分的优缺点分别是什么？</li>
+</ul>
+<h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">start_kernel</span><br><span class="line">	rest_init</span><br><span class="line">		kernel_init</span><br><span class="line">			do_basic_setup</span><br><span class="line">				driver_init</span><br></pre></td></tr></table></figure>
+<p><strong>坑1，这里应该有篇关于Linux内核启动的文章</strong><br><strong>坑2，Linux启动时间优化</strong><br>其中<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> __<span class="function">init <span class="title">driver_init</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">    <span class="comment">/* These are the core pieces */</span></span><br><span class="line">    devtmpfs_init();</span><br><span class="line">    devices_init();</span><br><span class="line">    buses_init();  </span><br><span class="line">    classes_init();</span><br><span class="line">    firmware_init();</span><br><span class="line">    hypervisor_init();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* These are also core pieces, but must come after the</span><br><span class="line">     * core core pieces.</span><br><span class="line">     */</span></span><br><span class="line">    platform_bus_init();</span><br><span class="line">    system_bus_init();</span><br><span class="line">    cpu_dev_init();</span><br><span class="line">    memory_dev_init();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>driver_init中包含了整个设备模型中用到的所有相关模块的初始化。</p>
+<h3 id="devices-init"><a href="#devices-init" class="headerlink" title="devices_init"></a>devices_init</h3><p>先看代码<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">devices_kset = kset_create_and_add(<span class="string">"devices"</span>, &amp;device_uevent_ops, <span class="literal">NULL</span>);</span><br><span class="line">dev_kobj = kobject_create_and_add(<span class="string">"dev"</span>, <span class="literal">NULL</span>);</span><br><span class="line">sysfs_dev_block_kobj = kobject_create_and_add(<span class="string">"block"</span>, dev_kobj);</span><br><span class="line">sysfs_dev_char_kobj = kobject_create_and_add(<span class="string">"char"</span>, dev_kobj);</span><br></pre></td></tr></table></figure></p>
+<p>代码中</p>
+<ul>
+<li>创建名为devices的kset，会在sysfs的根目录下建立devices目录，并且其uevent_ops被指定为device_uevent_ops.</li>
+<li>创建名为dev的kobject, 会在sysfs根目录下建立dev目录。</li>
+<li>创建名为block和char的kobject，它们的parent kobject是dev kobject，所以对应的目录在dev目录下创建，分别是block和char目录。</li>
+</ul>
+<p>而具体的kset_create_and_add和kobject_create_and_add请参考代码以及随后的系列文章。</p>
+<p>目前，sys下的目录如下：<br>sys/devices<br>sys/dev<br>sys/dev/block<br>sys/dev/char</p>
+<h3 id="buses-init-和-classes-init"><a href="#buses-init-和-classes-init" class="headerlink" title="buses_init 和 classes_init"></a>buses_init 和 classes_init</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">bus_kset = kset_create_and_add(<span class="string">"bus"</span>, &amp;bus_uevent_ops, <span class="literal">NULL</span>);</span><br><span class="line">class_kset = kset_create_and_add(<span class="string">"class"</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+<p>由上可知</p>
+<ul>
+<li>通过buses_init函数，创建了bus kset, 又在sysfs目录下建立了bus目录，bus kset的热插拔操作为bus_uevent_ops.</li>
+<li>通过classes_init函数，创建了class kset，又在sysfs目录下建立了class目录</li>
+</ul>
+<p>问题： </p>
+<ul>
+<li>1 class为什么没有热插拔函数？</li>
+<li>2 device和bus的uevent_ops的区别是什么？为什么有这种区别？</li>
+</ul>
+<p>目前，sys下的目录如下：<br>sys/devices<br>sys/dev<br>sys/dev/block<br>sys/dev/char<br>sys/bus<br>sys/class</p>
+<p>问题：</p>
+<ul>
+<li>1 为什么没有driver_init？</li>
+<li>2 sys/devices 和 sys/dev的关系是什么？</li>
+</ul>
+<h3 id="platform-bus-init"><a href="#platform-bus-init" class="headerlink" title="platform_bus_init"></a>platform_bus_init</h3><p>在设备驱动模型建立起来之后，通过bus的相关函数将platform_bus注册进系统中。<br>这其中涉及到两个部分</p>
+<ul>
+<li>bus</li>
+<li>platform_bus的实现</li>
+</ul>
+<h2 id="bus"><a href="#bus" class="headerlink" title="bus"></a>bus</h2><h2 id="device"><a href="#device" class="headerlink" title="device"></a>device</h2><h2 id="driver"><a href="#driver" class="headerlink" title="driver"></a>driver</h2><h2 id="class"><a href="#class" class="headerlink" title="class"></a>class</h2><h1 id="上层"><a href="#上层" class="headerlink" title="上层"></a>上层</h1><h2 id="sysfs"><a href="#sysfs" class="headerlink" title="sysfs"></a>sysfs</h2><h2 id="电源管理"><a href="#电源管理" class="headerlink" title="电源管理"></a>电源管理</h2><h2 id="热插拔"><a href="#热插拔" class="headerlink" title="热插拔"></a>热插拔</h2><h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li>深入Linux设备驱动程序内核机制</li>
+<li>Linux设备驱动程序 第三版</li>
+<li><a href="http://www.wowotech.net/sort/device_model" target="_blank" rel="external">蜗窝科技 统一设备模型</a></li>
+<li><a href="http://wenku.baidu.com/view/3f08de275901020207409cd4.html" target="_blank" rel="external">Linux设备模型浅析之uevent篇</a></li>
+<li>USB那些事儿</li>
+</ul>
+<h1 id="Linux设备驱动模型系列文章"><a href="#Linux设备驱动模型系列文章" class="headerlink" title="Linux设备驱动模型系列文章"></a>Linux设备驱动模型系列文章</h1><ul>
+<li><a href="">Linux设备驱动模型系列 - 1 系列结构篇</a></li>
+<li><a href="http://hoastyle.github.io/2016/06/19/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B%E7%B3%BB%E5%88%97/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B%E7%B3%BB%E5%88%97-2-kobject%E7%AF%87/">Linux设备驱动模型系列 - 2 kobject篇</a></li>
+<li><a href="http://hoastyle.github.io/2016/06/19/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B%E7%B3%BB%E5%88%97/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B%E7%B3%BB%E5%88%97-3-kset%E7%AF%87/">Linux设备驱动模型系列 - 3 kset篇</a></li>
+<li><a href="http://hoastyle.github.io/2016/06/19/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B%E7%B3%BB%E5%88%97/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B%E7%B3%BB%E5%88%97-4-bus-device-driver%E7%AF%87/">Linux设备驱动模型系列 - 4 bus device driver篇</a></li>
+<li><a href="http://hoastyle.github.io/2016/06/19/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B%E7%B3%BB%E5%88%97/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B%E7%B3%BB%E5%88%97-5-sysfs%E7%AF%87/">Linux设备驱动模型系列 - 5 sysfs篇</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/driver/" rel="tag">#driver</a>
+          
+            <a href="/tags/Linux/" rel="tag">#Linux</a>
+          
+            <a href="/tags/driver-model/" rel="tag">#driver model</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/06/19/It-s-ok-to/" rel="next" title="It's ok to...">
+                <i class="fa fa-chevron-left"></i> It's ok to...
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-2-kobject篇/" rel="prev" title="Linux设备驱动模型系列 - 2 kobject篇">
+                Linux设备驱动模型系列 - 2 kobject篇 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-1-系列结构篇/"
+           data-title="Linux设备驱动模型系列 - 1 系列结构篇" data-url="hoastyle.github.io/2016/06/19/Linux设备驱动模型系列/Linux设备驱动模型系列-1-系列结构篇/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/兔子.JPG"
+               alt="Hao(梁浩)" />
+          <p class="site-author-name" itemprop="name">Hao(梁浩)</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">16</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#底层"><span class="nav-number">1.</span> <span class="nav-text">底层</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#kobject"><span class="nav-number">1.1.</span> <span class="nav-text">kobject</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kset"><span class="nav-number">1.2.</span> <span class="nav-text">kset</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#中层"><span class="nav-number">2.</span> <span class="nav-text">中层</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#初始化"><span class="nav-number">2.1.</span> <span class="nav-text">初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#devices-init"><span class="nav-number">2.1.1.</span> <span class="nav-text">devices_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#buses-init-和-classes-init"><span class="nav-number">2.1.2.</span> <span class="nav-text">buses_init 和 classes_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#platform-bus-init"><span class="nav-number">2.1.3.</span> <span class="nav-text">platform_bus_init</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bus"><span class="nav-number">2.2.</span> <span class="nav-text">bus</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#device"><span class="nav-number">2.3.</span> <span class="nav-text">device</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver"><span class="nav-number">2.4.</span> <span class="nav-text">driver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#class"><span class="nav-number">2.5.</span> <span class="nav-text">class</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#上层"><span class="nav-number">3.</span> <span class="nav-text">上层</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sysfs"><span class="nav-number">3.1.</span> <span class="nav-text">sysfs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#电源管理"><span class="nav-number">3.2.</span> <span class="nav-text">电源管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#热插拔"><span class="nav-number">3.3.</span> <span class="nav-text">热插拔</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux设备驱动模型系列文章"><span class="nav-number">5.</span> <span class="nav-text">Linux设备驱动模型系列文章</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao(梁浩)</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<span id="busuanzi_container_site_pv">
+  &nbsp; | &nbsp; 本站总访问量<span id="busuanzi_value_site_pv"></span>次
+</span>
+
+<span id="busuanzi_container_site_uv">
+  &nbsp; | &nbsp; 本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"hoastyle"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>
